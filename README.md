@@ -2,7 +2,7 @@
 This respository is currently for describing the `OneStopWrapper.pl` of [maccu](https://maccu.sourceforge.net/index.html), which performs co-expression clustering in one command. In this document, we also present the use of a co-expression database of Arabidopsis Col-0 RNAseq samples made based on data from [DEE2](https://dee2.io/).
 
 ### Installation requirement
-It should be feasible to run `OneStopWrapper.pl` in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an ubuntu20 VM with 8GB ram for running all commands.
+It should be feasible to run `OneStopWrapper.pl` in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an ubuntu20 VM with 8GB ram to run all commands.
 
 Install java runtime environment.
 ```
@@ -40,7 +40,7 @@ coexDB20230714/ath/Col0/sel20210116.col0.TMM.whole
 
 The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix normalized by the TMM method (PMID: 20196867). Their columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, which were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` file, where the extracted portions were decided by parsing metadata download from NCBI. For example, the `root` one should be composed of root-related samples. For another example, the `whole` one should be composed of samples using _whole plants_.
 
-### Executing `OneStopWrapper.pl`
+### First execution of `OneStopWrapper.pl`
 It is OK to execute the script by specifying the path, and it is also OK to put its path into the PATH environment variable. Simple description of options will be displayed if no options entered.
 ```
 ubuntu@maccu:~$ maccuWrapper/OneStopWrapper.pl
@@ -63,3 +63,22 @@ Usage: OneStopWrapper.pl [<options>]+ <tgzFile>
    -outputTGZ <outputFilename> : output .tgz filename (default: coexRes.tgz)
 ```
 
+### Download example data files and run the first example
+This github repository contains example files under the `example` folder.
+```
+ubuntu@maccu:~$ git clone https://github.com/wdlingit/maccu.git
+
+ubuntu@maccu:~$ cd maccu/example/deg/
+ubuntu@maccu:~/maccu/example/deg$ ls
+foldchange.txt  genelist.txt
+```
+
+The `deg` directory contains two files, they are from experiment data of PMID: 20181752. The `genelist.txt` file contains simply gene IDs in AGI accessions. The `foldchange.txt` file is in tab-delimited format, where the first column for gene IDs and the second column for fold-chagne values. It is strongly suggested to use log2-fold-change as the fold-change values because that could be handled easily in Cytoscape.
+
+Since the experiment is for studying Arabidopsis roots and the initial analysis (of array) discovered 187 genes, it is of our interests to figure out potential co-expression modules inside the 187 genes. To do that, we use the database of root-related samples to infer potential co-expression modules.
+```
+ubuntu@maccu:~/maccu/example/deg$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
+                                  -input DEG genelist.txt \
+                                  -dbase root /home/ubuntu/coexDB20230714/ath/Col0/sel20210116.col0.TMM.root \
+                                  -fold foldchange foldchange.txt
+```
