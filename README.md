@@ -126,6 +126,27 @@ There are two kinds of files to be outputted:
 1. `.graph`: tab-delimited text files, representing graphs in [adjacency list](https://en.wikipedia.org/wiki/Adjacency_list) format. Each line represents one node (the first token) and edges connecting to it (other token, where numbers in parentheses are correlations).
 2. `.xgmml`: [XGMML](https://en.wikipedia.org/wiki/XGMML) files. These files can be imported into Cytoscape use its `File->Import->Network from File` function. In so doing, correlations between edges would be saved as `weight` attributes of edges in Cytoscape.
 
-Note that the files were named in the format `<database>.<gene set>.<threshold>`, where each file represents edges been recognized by using `<database>` between genes in `<gene set>` that are above `<threshold>` (in terms of correlation). In this naming scheme, we can apply options `-input` and `-dbase` multiple times with different alias and perform all combinations of computations. By the way, the default computation threshold series is 0.70, 0.75, ... 0.95 and this can be adjusted by apply the `-thresh` option.
+Note that the files were named in the format `<database>.<gene set>.<threshold>`, where each file represents edges been recognized by using `<database>` between genes in `<gene set>` that are above `<threshold>` (in terms of correlation). In this naming scheme, we can apply options `-input` and `-dbase` multiple times with different alias and perform all combinations of computations. By the way, the default computation threshold series is 0.70, 0.75, ... 0.95 and this can be adjusted by applying the `-thresh` option.
 
 ### Run the second example
+The `timecourse` contains four files, `797genes.txt` for the gene list and the three files for log2-fold-changes in different time points.
+```
+ubuntu@maccu:~/maccu/example/deg$ cd ../timecourse/
+
+ubuntu@maccu:~/maccu/example/timecourse$ ls
+797genes.txt  t01.txt  t06.txt  t24.txt
+```
+
+From the  last example, we learned that options `-input`, `-dbase`, and `-fold` can be applied multiple times.
+```
+ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
+                                         -input DEG 797genes.txt \
+                                         -dbase root /home/ubuntu/coexDB20230714/ath/Col0/sel20210116.col0.TMM.root \
+                                         -dbase ALL /home/ubuntu/coexDB20230714/ath/Col0/sel20210116.col0.TMM.ALL \
+                                         -fold t01 t01.txt \
+                                         -fold t06 t06.txt \
+                                         -fold t24 t24.txt
+```
+In so doing, we will have networks computed based on root-related database and ALL database, respectively. Also, the application of `-fold` would set three node attributes `t01`, `t06`, and `t24` in the XGMML files.
+
+Compute different combinations of `<database>.<gene set>` would enable us to perform
