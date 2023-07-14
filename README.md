@@ -38,4 +38,28 @@ coexDB20230714/ath/Col0/sel20210116.col0.TMM.shoot
 coexDB20230714/ath/Col0/sel20210116.col0.TMM.whole
 ```
 
-The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix whose columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, where were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` made by parsing metadata download from the NCBI database. For example, the `root` one should be composed of root-related samples. For another example, the `whole` one should be composed of samples using _whole plants_.
+The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix normalized by the TMM method (PMID: 20196867). Their columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, which were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` file, where the extracted portions were decided by parsing metadata download from NCBI. For example, the `root` one should be composed of root-related samples. For another example, the `whole` one should be composed of samples using _whole plants_.
+
+### Executing `OneStopWrapper.pl`
+It is OK to execute the script by specifying the path, and it is also OK to put its path into the PATH environment variable. Simple description of options will be displayed if no options entered.
+```
+ubuntu@maccu:~$ maccuWrapper/OneStopWrapper.pl
+Usage: OneStopWrapper.pl [<options>]+ <tgzFile>
+ options:
+   [-input <name> <fileName>]+ : input gene set names and gene set files, at least one.
+   -inputParam <parameterStr>  : fishing/clustering option (default: -L true)
+   -maccu <JARpath>            : path to maccu.jar (default: maccuWrapper/maccu.jar)
+   -method <classStr>          : maccu.CoExpressFishing or maccu.RelationComputer(default)
+   [-dbase <DBname> <DBloc>]+  : coex database names and database files
+   -probeMap <fileName>        : probe-gene mapping file, in case of using array database (default: /dev/null)
+   -thresh <from> <to> <step>  : correlation threshold range and step (default: 0.70 0.95 0.05)
+   -outDir <dirName>           : output folder name in the final tar.gz file (default: coex)
+   -graphAdj <optionStr>       : post computation adjustment parameters (default: "")
+   [-fold <name> <foldChangeFileName>]+ : fold-change set name and files (default: no setting)
+   [-graphAdjStr <inputPrefix> -remove <operandPrefix> <outputPrefix>]+ : graph-level remove operation on graphs
+                               made base on different coex databases
+   -graphAdjShift <shift>      : graph-level operand shift on computed network arrays (default: 1)
+   -keep                       : keep working directory (default: no keep)
+   -outputTGZ <outputFilename> : output .tgz filename (default: coexRes.tgz)
+```
+
