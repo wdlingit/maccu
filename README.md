@@ -1,8 +1,8 @@
 ## Multi-Array Correl. Computation Utility
-This respository is currently for describing the OneStopWrapper.pl of [maccu](https://maccu.sourceforge.net/index.html), which performs co-expression clustering in one command. In this document, we also present the use of a co-expression database of Arabidopsis Col-0 RNAseq samples made based on data from [DEE2](https://dee2.io/).
+This respository is currently for describing the `OneStopWrapper.pl` of [maccu](https://maccu.sourceforge.net/index.html), which performs co-expression clustering in one command. In this document, we also present the use of a co-expression database of Arabidopsis Col-0 RNAseq samples made based on data from [DEE2](https://dee2.io/).
 
 ### Installation requirement
-It should be feasible to run OneStopWrapper.pl in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an ubuntu20 VM with 8GB ram for running all commands.
+It should be feasible to run `OneStopWrapper.pl` in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an ubuntu20 VM with 8GB ram for running all commands.
 
 Install java runtime environment.
 ```
@@ -38,3 +38,4 @@ coexDB20230714/ath/Col0/sel20210116.col0.TMM.shoot
 coexDB20230714/ath/Col0/sel20210116.col0.TMM.whole
 ```
 
+The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix whose columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, where were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` made by parsing metadata download from the NCBI database. For example, the `root` one should be composed of root-related samples. For another example, the `whole` one should be composed of samples using _whole plants_.
