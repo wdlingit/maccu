@@ -38,7 +38,7 @@ coexDB20230714/ath/Col0/sel20210116.col0.TMM.shoot
 coexDB20230714/ath/Col0/sel20210116.col0.TMM.whole
 ```
 
-The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix normalized by the TMM method (PMID: 20196867). Their columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, which were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` file, where the extracted portions were decided by parsing metadata download from NCBI. For example, the `root` one should be composed of root-related samples. For another example, the `whole` one should be composed of samples using _whole plants_.
+The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix normalized by the TMM method (PMID: 20196867). Their columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, which were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` file, where the extracted portions were decided by parsing metadata download from NCBI. For example, the `root` one should be composed of root samples. For another example, the `whole` one should be composed of samples using _whole plants_.
 
 ### First execution of `OneStopWrapper.pl`
 It is OK to execute the script by specifying the path, and it is also OK to put its path into the PATH environment variable. Simple description of options will be displayed if no options entered.
@@ -75,7 +75,7 @@ foldchange.txt  genelist.txt
 
 The `deg` directory contains two files, they are from experiment data of PMID: 20181752. The `genelist.txt` file contains simply gene IDs in AGI accessions. The `foldchange.txt` file is in tab-delimited format, where the first column for gene IDs and the second column for fold-chagne values. It is strongly suggested to use log2-fold-change as the fold-change values because that could be handled easily in Cytoscape.
 
-Since the experiment is for studying Arabidopsis roots and the initial analysis (of arrays) discovered 187 genes, it is of our interests to figure out potential co-expression modules inside the 187 genes. To do that, we use the database of root-related samples to infer potential co-expression modules.
+Since the experiment is for studying Arabidopsis roots and the initial analysis (of arrays) discovered 187 genes, it is of our interests to figure out potential co-expression modules inside the 187 genes. To do that, we use the database of root samples to infer potential co-expression modules.
 ```
 ubuntu@maccu:~/maccu/example/deg$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
                                   -input DEG genelist.txt \
@@ -147,6 +147,18 @@ ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrappe
                                          -fold t06 t06.txt \
                                          -fold t24 t24.txt
 ```
-In so doing, we will have networks computed based on root-related database and ALL database, respectively. Also, the application of `-fold` would set three node attributes `t01`, `t06`, and `t24` in the XGMML files.
+In so doing, we will have networks computed based on root database and ALL database, respectively. Also, the application of `-fold` would set three node attributes `t01`, `t06`, and `t24` in the XGMML files.
 
-Compute different combinations of `<database>.<gene set>` would enable us to perform
+Compute different combinations of `<database>.<gene set>` would enable us to perform meaningful graph-level operation. For this example, we just computed `root.DEG` and `ALL.DEG`, doing `root.DEG - ALL.DEG` should give use gene pairs that show high enough correlations in root samples but not that high enough in ALL samples. More specifically, for example,  operation `root.DEG.0.8 - ALL.DEG.0.7` should give us gene pairs with correlations 0.8 or above in root samples an alsow with correlation lower than 0.7 in ALL samples => gene paris with correlations in roots significantly higher than that in ALL samples => gene paris got root-specific correlations.
+
+```
+ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
+                                         -input DEG 797genes.txt \
+                                         -dbase root /home/ubuntu/coexDB20230714/ath/Col0/sel20210116.col0.TMM.root \
+                                         -dbase ALL /home/ubuntu/coexDB20230714/ath/Col0/sel20210116.col0.TMM.ALL \
+                                         -fold t01 t01.txt \
+                                         -fold t06 t06.txt \
+                                         -fold t24 t24.txt \
+                                         -graphAdjStr root.DEG -remove ALL.DEG specific \
+                                         -graphAdjShift 2
+```
