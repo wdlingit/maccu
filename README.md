@@ -75,7 +75,7 @@ foldchange.txt  genelist.txt
 
 The `deg` directory contains two files, they are from experiment data of PMID: 20181752. The `genelist.txt` file contains simply gene IDs in AGI accessions. The `foldchange.txt` file is in tab-delimited format, where the first column is for gene IDs and the second column is for fold-chagne values. It is strongly suggested to use fold-change in log scale as the fold-change values because that could be handled easily in Cytoscape.
 
-Since the experiment is for studying Arabidopsis roots and the initial analysis (of arrays) discovered 187 genes, it is of our interests to figure out potential co-expression modules inside the 187 genes. To do that, we use the database of root samples to infer potential co-expression modules.
+Since the experiment is for studying Arabidopsis roots and the initial analysis (of arrays) discovered 187 genes showed differential expression, it is of our interests to figure out potential co-expression modules inside the 187 genes. To do that, we use the database of root samples to infer potential co-expression modules.
 ```
 ubuntu@maccu:~/maccu/example/deg$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
                                   -input DEG genelist.txt \
@@ -84,10 +84,10 @@ ubuntu@maccu:~/maccu/example/deg$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
 ```
 Points to be noticed:
 1. `-input` is used to set the input gene list file `genelist.txt` and its alias `DEG`.
-2. `-dbase` is uesed to set the database file to be used for co-expression clustering, as well as its alias in this computation. Note that the database files must be assigned with absolute paths.
+2. `-dbase` is uesed to set the database file to for co-expression clustering, as well as its alias in this computation. Note that the database files must be assigned with absolute paths.
 3. `-fold` is used to associate specified fold-change values to attribute `foldchange` of nodes in the final XGMML files. XGMML files can be imported into Cytoscape and it should be easy to fill node color according to node attributes. `-fold` is actually optional; that is, this can be omitted.
 
-The execution should be finished with the following lines in the output.
+The execution should be finished with the following lines in the screen.
 ```
 coex/root.DEG.0.70-all.graph
 coex/root.DEG.0.75-all.graph
@@ -122,14 +122,14 @@ coex/root.DEG.0.90.xgmml
 coex/root.DEG.0.95.xgmml
 ```
 
-There are two kinds of files to be outputted:
+There are two kinds of files been outputted:
 1. `.graph`: tab-delimited text files, representing graphs in [adjacency list](https://en.wikipedia.org/wiki/Adjacency_list) format. Each line represents one node (the first token) and edges connecting to it (other token, where numbers in parentheses are correlations).
 2. `.xgmml`: [XGMML](https://en.wikipedia.org/wiki/XGMML) files. These files can be imported into Cytoscape use its `File->Import->Network from File` function. In so doing, correlations between edges would be saved as `weight` attributes of edges in Cytoscape.
 
 Note that the files were named in the format `<database>.<gene set>.<threshold>`, where each file represents edges been recognized by using `<database>` between genes in `<gene set>` that are above `<threshold>` (in terms of correlation). In this naming scheme, we can apply options `-input` and `-dbase` multiple times with different aliases and perform all combinations of computations in one execution. By the way, the default threshold series is 0.95, 0.90, 0.85, ... 0.70 and this can be adjusted by applying the `-thresh` option.
 
 ### Run the second example
-The `timecourse` directory contains four files, `797genes.txt` for the gene list and the three files for log2-fold-changes in different time points.
+The `timecourse` directory contains four files, `797genes.txt` for the gene list and the three files for log2-fold-changes in different time points. They are from the time course experiment of PMID: 21248074.
 ```
 ubuntu@maccu:~/maccu/example/deg$ cd ../timecourse/
 
@@ -149,7 +149,7 @@ ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrappe
 ```
 In so doing, we will have networks computed based on root database and ALL database, respectively. Also, the application of `-fold` would set three node attributes `t01`, `t06`, and `t24` in the XGMML files.
 
-Compute different combinations of `<database>.<gene set>` would enable us to perform meaningful graph-level operations. For this example, we just computed `root.DEG` and `ALL.DEG`, doing `root.DEG - ALL.DEG` should give use gene pairs that show high enough correlations in root samples but not that high enough in ALL samples. More specifically, operation `root.DEG.0.8 - ALL.DEG.0.7` should give us gene pairs with correlations 0.8 or above in root samples an also with correlation lower than 0.7 in ALL samples => gene paris with correlations in roots significantly higher than that in ALL samples => gene pairs with root-specific correlations.
+Compute different combinations of `<database>.<gene set>` would enable us to perform meaningful graph-level operations. For this example, we just computed `root.DEG` and `ALL.DEG`, doing `root.DEG - ALL.DEG` should give use gene pairs that show high enough correlations in root samples but not that high in ALL samples. More specifically, operation `root.DEG.0.8 - ALL.DEG.0.7` should give us gene pairs with correlations 0.8 or above in root samples an also with correlation lower than 0.7 in ALL samples => gene paris with correlations in roots significantly higher than that in ALL samples => gene pairs with root-specific correlations.
 
 ```
 ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
@@ -163,4 +163,4 @@ ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrappe
                                          -graphAdjShift 2
 ```
 
-The two options `-graphAdjStr` and `-graphAdjShift` are related with the above described graph-level operation. `-graphAdjStr` is used for specifying operand networks in the computation, in terms of `<db1>.<set1>` ve `<db2>.<set2>`. Recall that the `<threshold>` part of generated netorks would be in a series, where the default series is 0.95, 0.90, 0.85, ... 0.70. `-graphAdjShift` is used for dealiing with the `<threshold>` part in the graph-level computation. It specifies the _threshold shift_ between `<db1>.<set1>` ve `<db2>.<set2>`. In this example, we would like to compute `root.DEG.0.95 - ALL.DEG.0.85`, `root.DEG.0.9 - ALL.DEG.0.8`, ... and so on as the _threshold step_ is 0.05 (specified by `-thresh`). In this case, the threshold difference between network operands is 1 that is twice of the _threshold step_, so we set `-graphAdjShift 2`.
+The two options `-graphAdjStr` and `-graphAdjShift` are related with the above described graph-level operation. `-graphAdjStr` is used for specifying operand networks in the computation, in terms of `<db1>.<set1>` ve `<db2>.<set2>`. Recall that the `<threshold>` part of generated netorks would be in a series, where the default series is 0.95, 0.90, 0.85, ... 0.70. `-graphAdjShift` is used for dealiing with the `<threshold>` part in the graph-level computation. It specifies the _threshold shift_ between `<db1>.<set1>` ve `<db2>.<set2>`. In this example, we would like to compute `root.DEG.0.95 - ALL.DEG.0.85`, `root.DEG.0.9 - ALL.DEG.0.8`, ... and so on as the _threshold step_ is 0.05 (specified by `-thresh`). In this case, the threshold difference between network operands is 1 which is twice of the _threshold step_, so we set `-graphAdjShift 2`.
