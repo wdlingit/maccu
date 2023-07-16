@@ -146,6 +146,31 @@ ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrappe
                                          -fold t01 t01.txt \
                                          -fold t06 t06.txt \
                                          -fold t24 t24.txt
+(deleted outputs...)
+coex/ALL.DEG.0.70-all.graph
+coex/ALL.DEG.0.75-all.graph
+coex/ALL.DEG.0.80-all.graph
+coex/ALL.DEG.0.85-all.graph
+coex/ALL.DEG.0.90-all.graph
+coex/ALL.DEG.0.95-all.graph
+coex/root.DEG.0.70-all.graph
+coex/root.DEG.0.75-all.graph
+coex/root.DEG.0.80-all.graph
+coex/root.DEG.0.85-all.graph
+coex/root.DEG.0.90-all.graph
+coex/root.DEG.0.95-all.graph
+coex/ALL.DEG.0.70.xgmml
+coex/ALL.DEG.0.75.xgmml
+coex/ALL.DEG.0.80.xgmml
+coex/ALL.DEG.0.85.xgmml
+coex/ALL.DEG.0.90.xgmml
+coex/ALL.DEG.0.95.xgmml
+coex/root.DEG.0.70.xgmml
+coex/root.DEG.0.75.xgmml
+coex/root.DEG.0.80.xgmml
+coex/root.DEG.0.85.xgmml
+coex/root.DEG.0.90.xgmml
+coex/root.DEG.0.95.xgmml
 ```
 In so doing, we will have networks computed based on root database and ALL database, respectively. Also, the application of `-fold` would set three node attributes `t01`, `t06`, and `t24` in the XGMML files.
 
