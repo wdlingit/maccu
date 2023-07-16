@@ -221,3 +221,30 @@ The followig picture was made by importing root.DEG.0.90.xgmml to Cytoscape, whe
 
 The following picture was made by importing specific.0.90.xgmml to Cytoscape, which was computed by `root.DEG.0.90 - ALL.DEG.0.80`. The three subpictures were colored based on `t01`, `t06`, and `t24` (from left to right), respectively.
 ![specific.0.90](example/timecourse/specific.0.90.png)
+
+### Run the fishing example
+By default, `-method` is set as `maccu.RelationComputer`, which was used for computing relationships between input genes. To discover relatioinships between input genes and all other genes, we will have to set `-method` to `maccu.CoExpressFishing`. In this example, we go to the `fishing` directory and use the `bait.txt` file as the input.
+```
+ubuntu@maccu:~/maccu/example/timecourse$ cd ../fishing/
+
+ubuntu@maccu:~/maccu/example/fishing$ ls
+bait.txt
+
+ubuntu@maccu:~/maccu/example/fishing$ cat bait.txt
+AT5G13630       1
+```
+The `bait.txt` file contains exactly one gene ID and is in tab-delimited format. Note that this tab-delimited format is not a requrirement, the gene list reading function reads exactly the first token of every line. Doing so is to let the `-fold` option can use the same function so that we can have some node attribute been set to 1 only for the initial bait genes.
+
+```
+ubuntu@maccu:~/maccu/example/fishing$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
+                                      -input bait bait.txt \
+                                      -method maccu.CoExpressFishing \
+                                      -inputParam "-STEP 1" \
+                                      -dbase root /home/ubuntu/coexDB20230714/ath/Col0/sel20210116.col0.TMM.root \
+                                      -fold bait bait.txt
+```
+Points to be noticed:
+1. `-method` was set to `maccu.CoExpressFishing` so that the fishing algorithm would be invoked,
+2. `-inputParam "-STEP 1"` to transfer the parameter `"-STEP 1"` to `maccu.CoExpressFishing` so that the fishing procedre would go only depth 1.
+3. `-fold bait bait.txt` so that node attribute `bait` of AT5G13630 will be 1.
+
