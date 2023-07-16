@@ -233,7 +233,7 @@ bait.txt
 ubuntu@maccu:~/maccu/example/fishing$ cat bait.txt
 AT5G13630       1
 ```
-The `bait.txt` file contains exactly one gene ID and is in tab-delimited format. Note that this tab-delimited format is not a requrirement, the gene list reading function reads exactly the first token of every line. Doing so is to let the `-fold` option can use the same function so that we can have some node attribute been set to 1 only for the initial bait genes.
+The `bait.txt` file contains exactly one gene ID and is in tab-delimited format. Note that this tab-delimited format is not a requrirement. The gene list reading function reads exactly the first token of every line. Doing so is to let the `-fold` option can use the same file so that we can have some node attribute been set to 1 only for the initial bait genes.
 
 ```
 ubuntu@maccu:~/maccu/example/fishing$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
