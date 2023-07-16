@@ -129,8 +129,8 @@ There are two kinds of files been outputted:
 Note that the files were named in the format `<database>.<gene set>.<threshold>`, where each file represents edges been recognized by using `<database>` between genes in `<gene set>` that are above `<threshold>` (in terms of correlation). In this naming scheme, we can apply options `-input` and `-dbase` multiple times with different aliases and perform all combinations of computations in one execution. By the way, the default threshold series is 0.95, 0.90, 0.85, ... 0.70 and this can be adjusted by applying the `-thresh` option.
 
 The following picture was made by importing root.DEG.0.70.xgmml into Cytoscape and setting continuous mapping on node filling colors with attribute `foldchange`.
-![Uploading root.DEG.0.70.xgmml.png…]()
 
+![root DEG 0 70 xgmml](example/deg/root.DEG.0.70.xgmml.png)
 
 ### Run the second example
 The `timecourse` directory contains four files, `797genes.txt` for the gene list and the three files for log2-fold-changes in different time points. They are from the time course experiment of PMID: 21248074.
