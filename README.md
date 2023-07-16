@@ -128,6 +128,10 @@ There are two kinds of files been outputted:
 
 Note that the files were named in the format `<database>.<gene set>.<threshold>`, where each file represents edges been recognized by using `<database>` between genes in `<gene set>` that are above `<threshold>` (in terms of correlation). In this naming scheme, we can apply options `-input` and `-dbase` multiple times with different aliases and perform all combinations of computations in one execution. By the way, the default threshold series is 0.95, 0.90, 0.85, ... 0.70 and this can be adjusted by applying the `-thresh` option.
 
+The following picture was made by importing root.DEG.0.70.xgmml into Cytoscape and setting continuous mapping on node filling colors with attribute `foldchange`.
+![Uploading root.DEG.0.70.xgmml.png…]()
+
+
 ### Run the second example
 The `timecourse` directory contains four files, `797genes.txt` for the gene list and the three files for log2-fold-changes in different time points. They are from the time course experiment of PMID: 21248074.
 ```
@@ -185,7 +189,30 @@ ubuntu@maccu:~/maccu/example/timecourse$ /home/ubuntu/maccuWrapper/OneStopWrappe
                                          -fold t06 t06.txt \
                                          -fold t24 t24.txt \
                                          -graphAdjStr root.DEG -remove ALL.DEG specific \
-                                         -graphAdjShift 2
+                                         -graphAdjShift 2 \
+                                         -thresh 0.8 0.95 0.05
+(deleted outputs...)
+coex/ALL.DEG.0.80-all.graph
+coex/ALL.DEG.0.85-all.graph
+coex/ALL.DEG.0.90-all.graph
+coex/ALL.DEG.0.95-all.graph
+coex/root.DEG.0.80-all.graph
+coex/root.DEG.0.85-all.graph
+coex/root.DEG.0.90-all.graph
+coex/root.DEG.0.95-all.graph
+coex/specific.0.90-all.graph
+coex/specific.0.95-all.graph
+coex/ALL.DEG.0.80.xgmml
+coex/ALL.DEG.0.85.xgmml
+coex/ALL.DEG.0.90.xgmml
+coex/ALL.DEG.0.95.xgmml
+coex/root.DEG.0.80.xgmml
+coex/root.DEG.0.85.xgmml
+coex/root.DEG.0.90.xgmml
+coex/root.DEG.0.95.xgmml
+coex/specific.0.90.xgmml
+coex/specific.0.95.xgmml
 ```
 
-The two options `-graphAdjStr` and `-graphAdjShift` are related with the above described graph-level operation. `-graphAdjStr` is used for specifying operand networks in the computation, in terms of `<db1>.<set1>` ve `<db2>.<set2>`. Recall that the `<threshold>` part of generated netorks would be in a series, where the default series is 0.95, 0.90, 0.85, ... 0.70. `-graphAdjShift` is used for dealiing with the `<threshold>` part in the graph-level computation. It specifies the _threshold shift_ between `<db1>.<set1>` ve `<db2>.<set2>`. In this example, we would like to compute `root.DEG.0.95 - ALL.DEG.0.85`, `root.DEG.0.9 - ALL.DEG.0.8`, ... and so on as the _threshold step_ is 0.05 (specified by `-thresh`). In this case, the threshold difference between network operands is 0.1 which is twice of the _threshold step_, so we set `-graphAdjShift 2`.
+The two options `-graphAdjStr` and `-graphAdjShift` are related with the above described graph-level operation. `-graphAdjStr` is used for specifying operand networks in the computation, in terms of `<db1>.<set1>` ve `<db2>.<set2>`. The `<threshold>` part of generated netorks is the series of 0.95, 0.90, 0.85, and 0.80 (assigned by `-thresh`). `-graphAdjShift` is used for dealiing with the `<threshold>` part in the graph-level computation. It specifies the _threshold shift_ between `<db1>.<set1>` ve `<db2>.<set2>`. In this example, we would like to compute `root.DEG.0.95 - ALL.DEG.0.85` and `root.DEG.0.9 - ALL.DEG.0.8` as the _threshold step_ is 0.05 (specified by `-thresh`). The threshold difference between network operands is 0.1, which is twice of the _threshold step_, so we set `-graphAdjShift 2`. As a result, there will be a number of .graph files and XGMML files prefixed by "specific" (specified by `-graphAdjStr`) made by the graph-level operation.
+
