@@ -219,5 +219,5 @@ The two options `-graphAdjStr` and `-graphAdjShift` are related with the above d
 The followig picture was made by importing root.DEG.0.90.xgmml to Cytoscape, where the coloring was based on `t01`.
 ![root.DEG.0.90_t01](example/timecourse/root.DEG.0.90_t01.png)
 
-The following picture was made by importing specific.0.90.xgmml to Cytoscape, which was computed by `root.DEG.0.90 - ALL.DEG.0.80`. The three subpictures were colored based on `t01`, `t06, and `t24` (from left to right), respectively.
+The following picture was made by importing specific.0.90.xgmml to Cytoscape, which was computed by `root.DEG.0.90 - ALL.DEG.0.80`. The three subpictures were colored based on `t01`, `t06`, and `t24` (from left to right), respectively.
 ![specific.0.90](example/timecourse/specific.0.90.png)
