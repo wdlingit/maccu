@@ -248,3 +248,5 @@ Points to be noticed:
 2. `-inputParam "-STEP 1"` to transfer the parameter `"-STEP 1"` to `maccu.CoExpressFishing` so that the fishing procedre would go only depth 1.
 3. `-fold bait bait.txt` so that node attribute `bait` of AT5G13630 will be 1.
 
+The followig picture was made by importing root.bait.0.80.xgmml to Cytoscape. Note that AT5G13630 was marked red via the `bait` node attribute.
+![root.bait.0.80](example/fishing/root.bait.0.80.xgmml.png)
