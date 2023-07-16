@@ -216,5 +216,8 @@ coex/specific.0.95.xgmml
 
 The two options `-graphAdjStr` and `-graphAdjShift` are related with the above described graph-level operation. `-graphAdjStr` is used for specifying operand networks in the computation, in terms of `<db1>.<set1>` ve `<db2>.<set2>`. The `<threshold>` part of generated netorks is the series of 0.95, 0.90, 0.85, and 0.80 (assigned by `-thresh`). `-graphAdjShift` is used for dealiing with the `<threshold>` part in the graph-level computation. It specifies the _threshold shift_ between `<db1>.<set1>` ve `<db2>.<set2>`. In this example, we would like to compute `root.DEG.0.95 - ALL.DEG.0.85` and `root.DEG.0.9 - ALL.DEG.0.8` as the _threshold step_ is 0.05 (specified by `-thresh`). The threshold difference between network operands is 0.1, which is twice of the _threshold step_, so we set `-graphAdjShift 2`. As a result, there will be a number of .graph files and XGMML files prefixed by "specific" (specified by `-graphAdjStr`) made by the graph-level operation.
 
+The followig picture was made by importing root.DEG.0.90.xgmml to Cytoscape, where the coloring was based on `t01`.
 ![root.DEG.0.90_t01](example/timecourse/root.DEG.0.90_t01.png)
+
+The following picture was made by importing specific.0.90.xgmml to Cytoscape, which was computed by `root.DEG.0.90 - ALL.DEG.0.80`. The three subpictures were colored based on `t01`, `t06, and `t24` (from left to right), respectively.
 ![specific.0.90](example/timecourse/specific.0.90.png)
