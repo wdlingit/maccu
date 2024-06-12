@@ -54,7 +54,7 @@ We are making efforts on collecting read counts, postprocessing, and building da
 | bacteria | Escherichia coli | ec | - | 4284 QC pass RNAseq samples, in progress |
 | yeast | Saccharomyces cerevisiae | sc | - | 11571 QC pass RNAseq samples, in progress |
 
-*NOTE*: Due to file size limitation, files larger than 2GB were split into smaller files of the same prefix. All file splits are needed to extracted the database files. A (rather) convenient way to download specific files is to copy the file links from the cloud storage page and use `curl` as in the following example:
+*NOTE*: Due to file size limitation, files larger than 2GB were split into smaller files of the same prefix. All file splits are needed for extracting the database files. A (rather) convenient way to download specific files is to copy the file links from the cloud storage page and use `curl` as in the following example:
 
 ```
 wdlin@comp06:somewhere$ curl -o coexDB_202406.ath.ALL.tar.gz.aa "https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK&path=%2Fath&files=coexDB_202406.ath.ALL.tar.gz.aa&download"
