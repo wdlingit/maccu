@@ -44,7 +44,7 @@ The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited
 
 We are making efforts on collecting read counts, postprocessing, and building database tables. We are now working on a few model species. Available updates of database files can be found at this [link](https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK) (cloud storage page of Academia Sinica).
 
-| name | species | folder | .tar.gz (prefix) | comment |
+| common name | species | folder | .tar.gz (prefix) | comment |
 | -------- | ------- | ------- | ------- | ------- |
 | arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.ALL.tar.gz.* | 19746 QC pass RNAseq samples, tissues not classified |
 | arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.Col0.tar.gz.* | 9089 QC pass Col-0 RNAseq samples, tissues classified |
