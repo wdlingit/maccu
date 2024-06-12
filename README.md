@@ -48,11 +48,11 @@ We are making efforts on collecting read counts, postprocessing, and building da
 | -------- | ------- | ------- | ------- | ------- |
 | arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.ALL.tar.gz.* | 19746 QC pass RNAseq samples, tissues not classified |
 | arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.Col0.tar.gz.* | 9089 QC pass Col-0 RNAseq samples, tissues classified |
-| worm | Caenorhabditis elegans | ce | - | in progress |
-| fly | Drosophila melanogaster | dm | - | in progress |
-| zebrafish | Danio rerio | dm | - | in progress |
-| bacteria | Escherichia coli | ec | - | in progress |
-| yeast | Saccharomyces cerevisiae | sc | - | in progress |
+| worm | Caenorhabditis elegans | ce | - | 5189 QC pass RNAseq samples, in progress |
+| fly | Drosophila melanogaster | dm | - | 11485 QC pass RNAseq samples, in progress |
+| zebrafish | Danio rerio | dr | - | 3881 QC pass RNAseq samples, in progress |
+| bacteria | Escherichia coli | ec | - | 4284 QC pass RNAseq samples, in progress |
+| yeast | Saccharomyces cerevisiae | sc | - | 11571 QC pass RNAseq samples, in progress |
 
 *NOTE*: Due to file size limitation, files larger than 2GB were split into smaller files of the same prefix. All file splits are needed to extracted the database file. A (rather) convenient way to download specific files is to copy the file links from the cloud storage page and use `curl` as in the following example:
 
