@@ -40,7 +40,7 @@ coexDB20230714/ath/Col0/sel20210116.col0.TMM.whole
 
 The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix normalized by the TMM method (PMID: 20196867). Their columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, which were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` file, where the extracted portions were decided by parsing metadata download from NCBI. For example, the `root` one is composed of root samples. For another example, the `whole` one is composed of samples using _whole plants_.
 
-### Database collection
+#### Database collection
 
 We are making efforts on collecting read counts, postprocessing, and building database tables. We are now working on a few model species. Available updates of database files can be found at this [link](https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK) (cloud storage page of Academia Sinica).
 
