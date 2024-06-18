@@ -10,7 +10,7 @@ The metadata tables made by DEE2 was used for the initial sample qualification. 
 2. To collect count data associated with SRR's from the DEE2 database, we collected SRR accessions (i) under SRS accessions collected in step1, (ii) with `experiment_library_strategy` of `RNA-Seq`, and (iii) `experiment_library_selection` with `cDNA`, `RANDOM`, `PolyA`, or `Oligo-dT`.
 3. Save SRR-SRS mapping (two columns) into a tab-delimited text file.
 
-Download the count file and use the perl-oneliner command like the following example to extract and aggregate read counts into biological replicates, i.e., SRS accessions.
+Download the count file and use the perl oneliner command like the following example to extract and aggregate read counts into biological replicates, i.e., SRS accessions.
 ```
 wdlin@login02:SOMEWHERE/ath$ head ath_SRR_20240529.txt
 DRR008476       DRS007600
@@ -52,6 +52,25 @@ DUP: SRS1042458 SRS2817876
 DUP: SRS1121919 SRS2218890
 
 wdlin@comp01:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt | perl -ne 'chomp; s/^\s+|\s+$//g; @t=split; print "$_\n" for @t' | perl -ne 'chomp; if($.==1){ open(FILE,"<ath_sel20240529.nMatrix.dupReport"); while($line=<FILE>){ chomp $line; if($line=~/^DUP/){ @s=split(/\s+/,$line); shift @s; shift @s; for $x (@s){ $duplicate{$x}=1 } }} close FILE; print "$_\tnondup\n" }else{ print "$_\t"; if(exists $duplicate{$_}){ print "0\n" }else{ print "1\n" } }' > ath_sel20240529.dup.txt
+
+wdlin@login02:SOMEWHERE/ath$ head ath_sel20240529.dup.txt
+Symbol  nondup
+DRS007600       1
+DRS007601       1
+DRS007602       1
+DRS014211       1
+DRS014212       1
+DRS030797       1
+DRS030798       1
+DRS047331       1
+DRS047332       1
 ```
 
-The first command was to use the script `duplicateDetect.pl` (also in our `scripts` directory)
+The first command was to use the script `duplicateDetect.pl` (also in our `scripts` directory) for identifying duplicate columns (samples). Inside the output file (`ath_sel20240529.nMatrix.dupReport` here), lines started with `DUP:` are for duplicated samples. The perl oneliner was to read the header column from the raw count matrix (`head -1 ath_sel20240529.nMatrix.txt`) and generate a 0-1 matrix (`ath_sel20240529.dup.txt`) based on the duplication report. The 0-1 matrix was for indicating which samples are nonduplicated. For samples reported in the ducplication report, only the first samples were specified as nonduplicated.
+
+```
+wdlin@login02:SOMEWHERE/ath$ ../scripts/matrixSelection.pl
+matrixSelection.pl <selMatrix> <sourceMatrix> <outPrefix> [<selTarget>]+
+
+wdlin@comp01:/RAID1/working/R418/20240529_coexDB/ath$ ../scripts/matrixSelection.pl ath_sel20240529.dup.txt ath_sel20240529.nMatrix.txt ath_sel20240529.nMatrix.txt nondup
+```
