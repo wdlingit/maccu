@@ -101,7 +101,7 @@ You may modify the `write.csv` command or use the following perl oneliner to tra
 wdlin@comp04:SOMEWHERE/ath$ cat sel20240529.nMatrix.TMM | perl -ne 'chomp; @t=split(/,/); $nonFirst=0; for $x (@t){ $x=~s/^"|"$//g; print "\t" if $nonFirst; $nonFirst=1; print "$x" } print "\n"' > sel20240529.nMatrix.TMM.txt
 ```
 
-### Simple classification part 1, downloading metadata from SRA
+### Simple classification part 1, downloading metadata from NCBI
 
 We firstly generate a list of SRS accessions of nonduplicated samples.
 ```
@@ -110,7 +110,7 @@ wdlin@comp04:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt.nondup | perl -n
 
 The `biosampleRetrieveBySRS.pl` (in our `scripts` directory) was used for retriving metadata from NCBI.
 ```
-wdlin@login02:/RAID1/working/R418/20240529_coexDB/ath$ ../scripts/biosampleRetrieveBySRS.pl
+wdlin@login02:SOMEWHERE/ath$ ../scripts/biosampleRetrieveBySRS.pl
 biosampleRetrieve.pl <listFile> <outSrsBios> <outXML>
 ```
 Points to be noticed:
