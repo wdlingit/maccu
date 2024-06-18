@@ -184,7 +184,7 @@ We intended to save the tab-delimited text file with extension `.xls` because it
 
 ![Excel editing of ecotype0.xls](https://github.com/wdlingit/maccu/blob/main/pic/ecotype0_excel.png)
 
-After the first round of manual curation, we saved the curation table for of col-0 *values* into a tab-delimited text file `ecotype0.txt` (quotes removed, if any). The following perl oneliner was applied to compute (i) attribute counts in the metadata and (ii) attribute counts associated with a curated col-0 *value*. In so doing, we may discover attributes other than `ecotype` that also store ecotype information (recall that the metadata were human-inputted).
+After the first round of manual curation, we saved the curation table for of col-0 *values* into a tab-delimited text file `ecotype0.txt` (quotes removed, if any). The following perl oneliner was applied to compute (i) attribute counts associated with a curated col-0 *value* (in `ecotype0.txt`) and (ii) attribute counts in the metadata. In so doing, we may discover attributes other than `ecotype` that also store ecotype information (recall that the metadata were human-inputted).
 ```
 wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.txt | perl -ne 'if($.==1){ open(FILE,"<extraction/ecotype0.txt"); $line=<FILE>; while($line=<FILE>){ chomp $line; $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=0 if $s[-1] eq "TRUE"; } close FILE } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ $attr=$1; $val=lc($2); $cnt{$attr}++; $match{$attr}++ if exists $hash{$val} } if(eof STDIN){ print "attr\tmatch\ttotal\n"; for $attr (sort keys %match){ $x=0; $x=$match{$attr} if exists $match{$attr}; print "$attr\t$x\t$cnt{$attr}\n" } }' > extraction/ecotype1.xls
 
@@ -200,7 +200,33 @@ background ecotype      114     215
 background strain       18      18
 cell line       2       63
 ```
-Again, the output table was saved with extension `.xls` for importing to Excel for further curation.
+Again, the output table was saved with extension `.xls` for importing to Excel for further curation. In Excel, we added on `ratio` column that computes the ratio that an attribute associated with curated col-0 values. We also added a `selection` column that simply check if the ratio is greater than 0.1 or not. Note that the simple check on ratios would be convenient but not accurate. So, again, manual curation is needed. In the following picture, you may find that we execlude `Genotype` even if more than 0.1 of it appearances were associated with col-0 like values. It is also surprising (and actually not surprising) that attribute `accession` was found to contain ecotype information. The curated table of ecotype *attributes* was saved into a tab-delimited text file `ecotype1.txt`.
 
 ![Excel editing of ecotype0.xls](https://github.com/wdlingit/maccu/blob/main/pic/ecotype1_excel.png)
 
+**FOR A SHORT SUMMARY**, now we have `ecotype1.txt` contains attributes we considered containing ecotype infromation in the metadata file. Note that the last column in `ecotype1.txt` is containing values of `TRUE` and `FALSE`. Also, in `ecotype0.txt`, we have values that we considered indicating col-0 ecotype.
+```
+wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype1.txt
+attr    match   total   ratio   selection
+Genotype        9       12      0.7500  FALSE
+Matrial 22      26      0.8462  FALSE
+Submitter Id    1       3115    0.0003  FALSE
+accession       120     292     0.4110  TRUE
+agent   29      135     0.2148  FALSE
+background cultivar     9       9       1.0000  TRUE
+background ecotype      114     215     0.5302  TRUE
+background strain       18      18      1.0000  TRUE
+cell line       2       63      0.0317  FALSE
+
+wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype0.txt
+value   count   col0
+col-0   5538    TRUE
+columbia        1906    TRUE
+col-0 (efo_0005148)     692     TRUE
+col0    250     TRUE
+landsberg erecta        223     FALSE
+col-0 (cs70000) 106     TRUE
+bay x sha ril   83      FALSE
+columbia (col-0)        81      TRUE
+columbia (efo_0005147)  75      TRUE
+```
