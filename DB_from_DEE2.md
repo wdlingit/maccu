@@ -180,6 +180,11 @@ columbia (col-0)        81
 columbia (efo_0005147)  75
 wassilewskija   69
 ```
-We intended to save the tab-delimited text file with extension `.xls` because it is convenient to do the next curation step by using Excel. By importing the `ecotype0.xls` file into Excel, we added one more column named `col0` for identifying those `ecotype` values that should be refering to arabidopsis col-0 ecotype.
-![Excel editing of ecotype0.xls]()
+We intended to save the tab-delimited text file with extension `.xls` because it is convenient to do the next *manual* curation step by using Excel. By importing `ecotype0.xls` into Excel, we added one more column named `col0` for identifying those `ecotype` values that should be refering to arabidopsis col-0 ecotype. Here, Excel formulas like FIND can be used for some quick and inaccurate identification. No matter how, a manual confirmation is needed. In the following example, it was shown that ecotype col-0 could be recorded under attribute `ecotype` with values like `col-0`, `columbia`, `col-0 (efo_0005148)`, `columbia_0`, ... and many others. Note that the *last* column `col0` contains only two values: `TRUE` and `FALSE`.
 
+![Excel editing of ecotype0.xls](https://github.com/wdlingit/maccu/blob/main/pic/ecotype0_excel.png)
+
+After the first round of manual curation, we saved the curation table for of col-0 *values* into a tab-delimited text file `ecotype0.txt` (quotes removed, if any). The following perl oneliner was applied to compute (i) attribute counts in the metadata and (ii) attribute counts associated with a curated col-0 *value*. In so doing, we may discover attributes other than `ecotype` that also store ecotype information (recall that the metadata were human-inputted).
+```
+
+```
