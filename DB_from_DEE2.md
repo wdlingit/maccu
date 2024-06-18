@@ -180,11 +180,24 @@ columbia (col-0)        81
 columbia (efo_0005147)  75
 wassilewskija   69
 ```
-We intended to save the tab-delimited text file with extension `.xls` because it is convenient to do the next *manual* curation step by using Excel. By importing `ecotype0.xls` into Excel, we added one more column named `col0` for identifying those `ecotype` values that should be refering to arabidopsis col-0 ecotype. Here, Excel formulas like FIND can be used for some quick and inaccurate identification. No matter how, a manual confirmation is needed. In the following example, it was shown that ecotype col-0 could be recorded under attribute `ecotype` with values like `col-0`, `columbia`, `col-0 (efo_0005148)`, `columbia_0`, ... and many others. Note that the *last* column `col0` contains only two values: `TRUE` and `FALSE`.
+We intended to save the tab-delimited text file with extension `.xls` because it is convenient to do the next *manual* curation step by using Excel. By importing `ecotype0.xls` into Excel, we added one more column named `col0` for identifying those `ecotype` values that should be refering to arabidopsis col-0 ecotype. Here, Excel formulas like FIND can be used for some quick and inaccurate identification. No matter how, a manual confirmation is needed. In the following example, it was shown that ecotype col-0 could be recorded under attribute `ecotype` with values like `col-0`, `columbia`, `col-0 (efo_0005148)`, `col-0 (cs70000)`, ... and many others. Note that the *last* column `col0` contains only two values: `TRUE` and `FALSE`.
 
 ![Excel editing of ecotype0.xls](https://github.com/wdlingit/maccu/blob/main/pic/ecotype0_excel.png)
 
 After the first round of manual curation, we saved the curation table for of col-0 *values* into a tab-delimited text file `ecotype0.txt` (quotes removed, if any). The following perl oneliner was applied to compute (i) attribute counts in the metadata and (ii) attribute counts associated with a curated col-0 *value*. In so doing, we may discover attributes other than `ecotype` that also store ecotype information (recall that the metadata were human-inputted).
 ```
+wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.txt | perl -ne 'if($.==1){ open(FILE,"<extraction/ecotype0.txt"); $line=<FILE>; while($line=<FILE>){ chomp $line; $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=0 if $s[-1] eq "TRUE"; } close FILE } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ $attr=$1; $val=lc($2); $cnt{$attr}++; $match{$attr}++ if exists $hash{$val} } if(eof STDIN){ print "attr\tmatch\ttotal\n"; for $attr (sort keys %match){ $x=0; $x=$match{$attr} if exists $match{$attr}; print "$attr\t$x\t$cnt{$attr}\n" } }' > extraction/ecotype1.xls
 
+wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype1.xls
+attr    match   total
+Genotype        9       12
+Matrial 22      26
+Submitter Id    1       3115
+accession       120     292
+agent   29      135
+background cultivar     9       9
+background ecotype      114     215
+background strain       18      18
+cell line       2       63
 ```
+Again, the output table was saved with extension `.xls` for importing to Excel for further curation.
