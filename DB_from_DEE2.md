@@ -1,6 +1,6 @@
 ## Steps to build a co-expression database from DEE2 datasets
 
-This document contains steps for downloading specified SRS metadata and classification of samples. Steps in this document were done in Ubuntu 20 servers with 128GB memory. For human and mouse data, some steps may take up to more than 500GB memory.
+This document contains steps for downloading specified SRS metadata and classification of samples. Steps in this document were done in a Ubuntu 20 server with 128GB memory. For human and mouse data, some steps may take up to more than 500GB memory.
 
 ### Processing the metadata file and aggregate the read counts
 
