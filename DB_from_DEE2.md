@@ -201,3 +201,6 @@ background strain       18      18
 cell line       2       63
 ```
 Again, the output table was saved with extension `.xls` for importing to Excel for further curation.
+
+![Excel editing of ecotype0.xls](https://github.com/wdlingit/maccu/blob/main/pic/ecotype1_excel.png)
+
