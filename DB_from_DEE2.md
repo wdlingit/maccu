@@ -1,4 +1,4 @@
-## Steps to build co-ex db from DEE2 datasets
+## Steps to build a co-expression database from DEE2 datasets
 
 Steps in this document were done in Ubuntu 20 servers with 128GB memory. For human and mouse data, some steps may take up to more than 500GB memory.
 
@@ -81,3 +81,26 @@ wdlin@comp01:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.dup.tx
 ```
 
 In this example, the read count matrix without duplicated samples would be named `ath_sel20240529.nMatrix.txt.nondup`.
+
+### In case no sample classification required
+
+We believe that certain normalization is needed for the co-expression database but not the row counts. In case that no sample classification requried. The following R commands were adopted for the normalization task using the TMM method (PMID: 20196867).
+```
+library("edgeR")
+x <- read.delim("ath_sel20240529.nMatrix.txt.nondup",row.names="Symbol")
+dge <- DGEList(counts=x)
+dge <- calcNormFactors(dge)
+v <- voom(dge,normalize="none")
+write.csv(x=v$E,file="sel20240529.nMatrix.TMM")
+quit()
+```
+
+You may modify the `write.csv` command or use the following perl oneliner to transfer the output CSV file into a tab-delimited text file.
+
+```
+wdlin@comp04:SOMEWHERE/ath$ cat sel20240529.nMatrix.TMM | perl -ne 'chomp; @t=split(/,/); $nonFirst=0; for $x (@t){ $x=~s/^"|"$//g; print "\t" if $nonFirst; $nonFirst=1; print "$x" } print "\n"' > sel20240529.nMatrix.TMM.txt
+```
+
+### Simple classification part 1, downloading metadata from SRA
+
+
