@@ -51,9 +51,9 @@ DUP: ERS1647359 ERS1827236
 DUP: SRS1042458 SRS2817876
 DUP: SRS1121919 SRS2218890
 
-wdlin@comp01:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt | perl -ne 'chomp; s/^\s+|\s+$//g; @t=split; print "$_\n" for @t' | perl -ne 'chomp; if($.==1){ open(FILE,"<ath_sel20240529.nMatrix.dupReport"); while($line=<FILE>){ chomp $line; if($line=~/^DUP/){ @s=split(/\s+/,$line); shift @s; shift @s; for $x (@s){ $duplicate{$x}=1 } }} close FILE; print "$_\tnondup\n" }else{ print "$_\t"; if(exists $duplicate{$_}){ print "0\n" }else{ print "1\n" } }' > ath_sel20240529.dup.txt
+wdlin@comp04:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt | perl -ne 'chomp; s/^\s+|\s+$//g; @t=split; print "$_\n" for @t' | perl -ne 'chomp; if($.==1){ open(FILE,"<ath_sel20240529.nMatrix.dupReport"); while($line=<FILE>){ chomp $line; if($line=~/^DUP/){ @s=split(/\s+/,$line); shift @s; shift @s; for $x (@s){ $duplicate{$x}=1 } }} close FILE; print "$_\tnondup\n" }else{ print "$_\t"; if(exists $duplicate{$_}){ print "0\n" }else{ print "1\n" } }' > ath_sel20240529.dup.txt
 
-wdlin@login02:SOMEWHERE/ath$ head ath_sel20240529.dup.txt
+wdlin@comp04:SOMEWHERE/ath$ head ath_sel20240529.dup.txt
 Symbol  nondup
 DRS007600       1
 DRS007601       1
@@ -74,10 +74,10 @@ The last command for duplication removal was to apply `matrixSelection.pl` (in o
 3. output prefix: a output filename would be in the form `<output prefix>.<target>`.
 4. targets: one or more column headers from the selection matrix could be selected for column selection from the source matrix.
 ```
-wdlin@login02:SOMEWHERE/ath$ ../scripts/matrixSelection.pl
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl
 matrixSelection.pl <selMatrix> <sourceMatrix> <outPrefix> [<selTarget>]+
 
-wdlin@comp01:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.dup.txt ath_sel20240529.nMatrix.txt ath_sel20240529.nMatrix.txt nondup
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.dup.txt ath_sel20240529.nMatrix.txt ath_sel20240529.nMatrix.txt nondup
 ```
 
 In this example, the read count matrix without duplicated samples would be named `ath_sel20240529.nMatrix.txt.nondup`.
@@ -110,14 +110,21 @@ wdlin@comp04:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt.nondup | perl -n
 
 The `biosampleRetrieveBySRS.pl` (in our `scripts` directory) was used for retriving metadata from NCBI.
 ```
-wdlin@login02:SOMEWHERE/ath$ ../scripts/biosampleRetrieveBySRS.pl
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleRetrieveBySRS.pl
 biosampleRetrieve.pl <listFile> <outSrsBios> <outXML>
 ```
 Points to be noticed:
 1. The [NCBI EDirect utility](https://www.ncbi.nlm.nih.gov/books/NBK179288/) is required for running this script
 2. This script will write retrieved metadata XML into `<outXML>` and one line of SRS-BioSample accession pairs into `<outSrsBios>`. You may use the line numbers in `<outSrsBios>` to check numbers of SRS records with successfully retrieved metadata.
 3. This script will *append* contents to the two output files, and it will process only SRS accessions not in `<outSrsBios>`. That is, you may simply repeat the same command a few number of times for retrieving metadata for the same list without taking care of the outputs.
-4. This script doesn't support parallel processing. You may apply a command like `split -l 2500 -d ath_sel20240529.list ath_sel20240529.list.` to split the list into files for parallel metadata retrieval. Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
+4. This script doesn't support parallel processing. You may apply a command like `split -l 2500 -d ath_sel20240529.list ath_sel20240529.list.` to split the list into files for parallel metadata retrieval (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
 5. Variable `$maxTry` were hard-coded as `3` for the number of re-try an `esearch` command. Modify it if needed.
 6. Inside the script, the first two `esearch` commands were used for retrieving the corresponding BioSample accession of a SRS accession. They are my current best practices for retrieving BioSample accessions from SRS accessions. Modify them if needed.
 7. The last `esearch` comand in the script was to extract metadata of the BioSample accession corresponding to a SRS accession. The reason that we extract metadata form BioSample but not SRA is that the metadata from BioSample is generally more detailed than that from SRA.
+
+Again, it is possible that some SRS might retrieve no metadata. So we may apply a similar technique to remove them from the count matrix. (`ath_sel20240529.map` is the (merged) `<outSrsBios>` output file)
+```
+wdlin@comp04:SOMEWHERE/ath$ cat ath_sel20240529.map | perl -ne 'if($.==1){ print "SRS\tgot\n" } chomp; @t=split; print "$t[0]\t1\n"' > ath_sel20240529.gotMetadata
+
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.gotMetadata ath_sel20240529.nMatrix.txt.nondup ath_sel20240529.nMatrix got
+```
