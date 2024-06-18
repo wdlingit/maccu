@@ -103,4 +103,21 @@ wdlin@comp04:SOMEWHERE/ath$ cat sel20240529.nMatrix.TMM | perl -ne 'chomp; @t=sp
 
 ### Simple classification part 1, downloading metadata from SRA
 
+We firstly generate a list of SRS accessions of nonduplicated samples.
+```
+wdlin@comp04:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt.nondup | perl -ne 'chomp; @t=split; shift @t; for $x (@t){ print "$x\n" }' > ath_sel20240529.list
+```
 
+The `biosampleRetrieveBySRS.pl` (in our `scripts` directory) was used for retriving metadata from NCBI.
+```
+wdlin@login02:/RAID1/working/R418/20240529_coexDB/ath$ ../scripts/biosampleRetrieveBySRS.pl
+biosampleRetrieve.pl <listFile> <outSrsBios> <outXML>
+```
+Points to be noticed:
+1. The [NCBI EDirect utility](https://www.ncbi.nlm.nih.gov/books/NBK179288/) is required for running this script
+2. This script will write retrieved metadata XML into `<outXML>` and one line of SRS-BioSample accession pairs into `<outSrsBios>`. You may use the line numbers in `<outSrsBios>` to check numbers of SRS records with successfully retrieved metadata.
+3. This script will *append* contents to the two output files, and it will process only SRS accessions not in `<outSrsBios>`. That is, you may simply repeat the same command a few number of times for retrieving metadata for the same list without taking care of the outputs.
+4. This script doesn't support parallel processing. You may apply a command like `split -l 2500 -d ath_sel20240529.list ath_sel20240529.list.` to split the list into files for parallel metadata retrieval. Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
+5. Variable `$maxTry` were hard-coded as `3` for the number of re-try an `esearch` command. Modify it if needed.
+6. Inside the script, the first two `esearch` commands were used for retrieving the corresponding BioSample accession of a SRS accession. They are my current best practices for retrieving BioSample accession. Modify them if needed.
+7. The last `esearch` comand in the script was to extract metadata of the BioSample accession corresponding to a SRS accession. The reason that we extract metadata form BioSample but not SRA is that the metadata from BioSample is generally more detailed than that from SRA.
