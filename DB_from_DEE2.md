@@ -30,7 +30,7 @@ wdlin@comp04:SOMEWHERE/ath$ bzip2 -dc athaliana_se.tsv.bz2 | perl -ne 'if($.==1)
 Points to be noticed:
 1. `athaliana_se.tsv.bz2` is the count file downloaded from the DEE2 database
 2. `ath_SRR_20240529.txt` is the SRR-SRS mapping (a two-column tab-delimited text file) with collected SRS accessions in above step1.
-3. The output file `ath_sel20240529.nMatrix.txt` is the raw count matrix, with columns for samples and rows for genes.
+3. The output file `ath_sel20240529.nMatrix.txt` (tab-delimited) is the raw count matrix, with columns for samples and rows for genes.
 
 ### Duplicate removal
 
@@ -66,11 +66,18 @@ DRS047331       1
 DRS047332       1
 ```
 
-The first command was to use the script `duplicateDetect.pl` (also in our `scripts` directory) for identifying duplicate columns (samples). Inside the output file (`ath_sel20240529.nMatrix.dupReport` here), lines started with `DUP:` are for duplicated samples. The perl oneliner was to read the header column from the raw count matrix (`head -1 ath_sel20240529.nMatrix.txt`) and generate a 0-1 matrix (`ath_sel20240529.dup.txt`) based on the duplication report. The 0-1 matrix was for indicating which samples are nonduplicated. For samples reported in the ducplication report, only the first samples were specified as nonduplicated.
+The first command was to use the script `duplicateDetect.pl` (in our `scripts` directory) for identifying duplicate columns (samples). Inside the output file (`ath_sel20240529.nMatrix.dupReport` here), lines started with `DUP:` are for duplicated samples. The perl oneliner was to read the header column from the raw count matrix (`head -1 ath_sel20240529.nMatrix.txt`) and generate a 0-1 matrix (`ath_sel20240529.dup.txt`) based on the duplication report. The 0-1 matrix was for indicating which samples are nonduplicated. For samples reported in the ducplication report, only the first samples were specified as nonduplicated.
 
+The last command for duplication removal was to apply `matrixSelection.pl` (in our `scripts` directory). This script takes at least four parameters:
+1. selection matrix: in this case, `ath_sel20240529.dup.txt` is the selection matrix. Note that column headers are treated as selection targets.
+2. source matrix: a tab-delimited matrix file, with columns for samples.
+3. output prefix: a output filename would be in the form `<output prefix>.<target>`.
+4. targets: one or more column headers from the selection matrix could be selected for column selection from the source matrix.
 ```
 wdlin@login02:SOMEWHERE/ath$ ../scripts/matrixSelection.pl
 matrixSelection.pl <selMatrix> <sourceMatrix> <outPrefix> [<selTarget>]+
 
-wdlin@comp01:/RAID1/working/R418/20240529_coexDB/ath$ ../scripts/matrixSelection.pl ath_sel20240529.dup.txt ath_sel20240529.nMatrix.txt ath_sel20240529.nMatrix.txt nondup
+wdlin@comp01:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.dup.txt ath_sel20240529.nMatrix.txt ath_sel20240529.nMatrix.txt nondup
 ```
+
+In this example, the read count matrix without duplicated samples would be named `ath_sel20240529.nMatrix.txt.nondup`.
