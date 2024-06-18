@@ -231,7 +231,7 @@ columbia (col-0)        81      TRUE
 columbia (efo_0005147)  75      TRUE
 ```
 
-So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 value for every sample. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS073469 is the first SRS classified as col-0. Note that our approach might not be fully accruate, but classified samples would be based on specific attributes and specific values in the metadata file.
+So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 value for every sample. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS014211 and DRS014212 are the first two SRS accessions considered not related with col-0. Note that our approach might not be fully accruate, but classified samples would be based on specific attributes and specific values in the metadata file.
 ```
 wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleClassify.pl
 biosampleClassify.pl <attrFile> <valueFile> <biosampleXML>
@@ -250,3 +250,70 @@ DRS014211       0       0
 DRS014212       0       0
 DRS073469       0       1
 ```
+
+Again, we applied the `matrixSelection.pl` script to extract the potion of col-0 samples from a count matrix by taking the classification matrix as the selection matrix.
+```
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl extraction/ath_SRS_20240529.ecotype ath_sel20240529.nMatrix.txt.nondup extraction/ath_sel20240529.nMatrix col0
+```
+
+In our practice, we would do normalization on the count matrix of all collected col-0 samples here (refer above TMM method part for the normalization steps).
+
+### Sample classification part 3, an example of arabidopsis tissues
+
+Suppose that we have an attribute file `tissue1.txt` (like `ecotype1.txt` in above) and a value file (like `ecotype0` in above). We can similarly generate a classification matrix for tissues.
+```
+wdlin@comp04:SOMEWHERE/ath$ tail extraction/tissue1.txt
+strain  8       204     0.0392  FALSE
+tag     1       18      0.0556  FALSE
+time    5       1453    0.0034  FALSE
+tissue  12875   14761   0.8722  TRUE
+tissue type     69      95      0.7263  TRUE
+tissue/cell type        2       3       0.6667  TRUE
+tissue_type     133     146     0.9110  TRUE
+tissuie 3       3       1.0000  TRUE
+tissus  2       23      0.0870  TRUE
+treatment       16      7384    0.0022  FALSE
+
+wdlin@comp04:SOMEWHERE/ath$ head extraction/tissue0.txt
+value   count   leaf    rosette root    shoot   flower  seedling        seed    whole   CNT     OR
+leaf    1659    TRUE    FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   1       TRUE
+seedlings       1175    FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
+root    1132    FALSE   FALSE   TRUE    FALSE   FALSE   FALSE   FALSE   FALSE   1       TRUE
+leaves  1030    TRUE    FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   1       TRUE
+seedling        1018    FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
+shoot   600     FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   FALSE   FALSE   1       TRUE
+whole seedling  573     FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
+whole seedlings 429     FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
+whole plant     399     FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    1       TRUE
+
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleClassify.pl extraction/tissue1.txt extraction/tissue0.txt ath_SRS_20240529.txt > extraction/ath_SRS_20240529.tissue
+
+wdlin@comp04:SOMEWHERE/ath$ head extraction/ath_SRS_20240529.tissue
+SRS     count   leaf    rosette root    shoot   flower  seedling        seed    whole   CNT     OR
+DRS007600       0       0       0       0       0       1       0       0       0       0       1
+ERS1174633      0       0       0       0       0       1       0       0       0       0       1
+DRS007601       0       0       0       0       0       1       0       0       0       0       1
+ERS1174634      0       0       0       0       0       1       0       0       0       0       1
+DRS007602       0       0       0       0       0       1       0       0       0       0       1
+ERS1174635      0       0       0       0       0       1       0       0       0       0       1
+DRS014211       0       0       0       0       0       0       0       0       0       0       0
+DRS014212       0       0       0       0       0       0       0       0       0       0       0
+DRS073469       0       0       0       0       0       0       0       0       0       0       0
+```
+
+Given that we have the normalized log-count-per-million matrix of only col-0 samples saved in tab-delimited text file `sel20240529.Col0.TMM`, the following command can be applied for generating portions of tissues extracted from the normalized count matrix.
+```
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_SRS_20240529.tissue coexDB_202406/ath/sel20240529.Col0.TMM coexDB_202406/ath/sel20240529.Col0.TMM leaf rosette root shoot flower seedling seed whole
+
+wdlin@comp04:SOMEWHERE/ath$ find coexDB_202406/ath/ | perl -ne 'chomp; next if -d "$_"; print "$_\n"' | perl -ne 'chomp; $msg=`head -1 $_`; chomp $msg; @t=split(/\t/,$msg); $cnt=@t; $cnt--; print "$_\t$cnt\n"'
+coexDB_202406/ath/sel20240529.Col0.TMM  9094
+coexDB_202406/ath/sel20240529.Col0.TMM.flower   247
+coexDB_202406/ath/sel20240529.Col0.TMM.leaf     2090
+coexDB_202406/ath/sel20240529.Col0.TMM.root     1084
+coexDB_202406/ath/sel20240529.Col0.TMM.rosette  587
+coexDB_202406/ath/sel20240529.Col0.TMM.seed     323
+coexDB_202406/ath/sel20240529.Col0.TMM.seedling 2865
+coexDB_202406/ath/sel20240529.Col0.TMM.shoot    548
+coexDB_202406/ath/sel20240529.Col0.TMM.whole    527
+```
+The last command is for numbers of data columns (samples) in the extracted matrixes.
