@@ -131,4 +131,55 @@ wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.gotMet
 
 ### Sample classification part 2, an example of arabidopsis ecotypes
 
-Due to the complexity
+Due to the complexity of human-input metadata, we don't have a completely automatic classification method. Here we present an approximation that gava us enough number of samples of what we intended to classify. In this session, we present what we had done on arabidopsis ecotypes.
+
+Suppose that `ath_SRS_20240529.txt` is the metadata XML file that we obtained using the script described in the last session. The following two commands helped us for understanding the diversity inside the metadata.
+```
+wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.txt | perl -ne 'chomp; if(/<Attribute attribute_name="(.+?)"/){ $hash{"$1"}++ } if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > ath_SRS_20240529.attributes
+
+wdlin@comp04:SOMEWHERE/ath$ head ath_SRS_20240529.attributes
+tissue  14761
+source_name     13210
+genotype        11304
+ecotype 10567
+age     8852
+treatment       7384
+geo_loc_name    5283
+INSDC status    3126
+INSDC first public      3126
+INSDC center name       3126
+
+wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.attributes | perl -ne 'chomp; @t=split(/\t/); $cmd="cat ath_SRS_20240529.txt | grep \"\\\"$t[0]\\\"\" | uniq | head -30"; print "ATTR: $_\n"; system $cmd' | less
+ATTR: tissue    14761
+      <Attribute attribute_name="organism part" harmonized_name="tissue" display_name="tissue">flower bud (EFO_0001924)</Attribute>
+      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">seedlings</Attribute>
+      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">root</Attribute>
+      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">seedling</Attribute>
+      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">shoot apex</Attribute>
+      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">Inflorescence meristems and young floral buds</Attribute>
+      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">whole tisues</Attribute>
+      <Attribute attribute_name="tissue" harmonized_name="tissue" display_name="tissue">1cm long root tips</Attribute>
+      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">cultured cell line MM2d</Attribute>
+(deleted)
+```
+In the metadata XML file, each BioSample is associated with a number of `attributes` which may have different values. For example, samples may have `tissue` attributes of values `root`, `seedling`, .... The first perl oneliner was to collect all attributes and rank them from the most frequently recorded attributes to the least frequently recorded attributes. In file `ath_SRS_20240529.attributes`, we may find that the `tissue` attribute was ranked first, which *should be* corresponding to tissue information. It was also found that the `ecotype` attribute was ranked fourth and that *should be* corresponding to ecotype information. The last perl oneliner command was to list first few nonredundant records for each attributes using simple linux commands (so might be inaccurate). This helped us for quick browsing possible values of each attributes.
+
+Since the above initial observation suggested us that `ecotype` could be an attribute relate with ecotype information, we applied the following perl oneliner to extract (lower-cased) values of attribute `ecotype`.
+```
+wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.txt | perl -ne 'chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ print "$2\n" if $1 eq "ecotype" }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/ecotype0.xls
+
+wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype0.xls
+col-0   5538
+columbia        1906
+col-0 (efo_0005148)     692
+col0    250
+landsberg erecta        223
+col-0 (cs70000) 106
+bay x sha ril   83
+columbia (col-0)        81
+columbia (efo_0005147)  75
+wassilewskija   69
+```
+We intended to save the tab-delimited text file with extension `.xls` because it is convenient to do the next curation step by using Excel. By importing the `ecotype0.xls` file into Excel, we added one more column named `col0` for identifying those `ecotype` values that should be refering to arabidopsis col-0 ecotype.
+![Excel editing of ecotype0.xls]()
+
