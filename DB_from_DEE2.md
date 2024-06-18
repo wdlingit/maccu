@@ -231,10 +231,22 @@ columbia (col-0)        81      TRUE
 columbia (efo_0005147)  75      TRUE
 ```
 
-So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 value for every sample. To do that, we applied the `biosampleClassify.pl` script.
+So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 value for every sample. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS073469 is the first SRS classified as col-0. Note that our approach might not be fully accruate, but classified samples would be based on specific attributes and specific values in the metadata file.
 ```
 wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleClassify.pl
 biosampleClassify.pl <attrFile> <valueFile> <biosampleXML>
 
 wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleClassify.pl extraction/ecotype1.txt extraction/ecotype0.txt ath_SRS_20240529.txt > extraction/ath_SRS_20240529.ecotype
+
+wdlin@comp04:SOMEWHERE/ath$ head extraction/ath_SRS_20240529.ecotype
+SRS     count   col0
+DRS007600       0       1
+ERS1174633      0       1
+DRS007601       0       1
+ERS1174634      0       1
+DRS007602       0       1
+ERS1174635      0       1
+DRS014211       0       0
+DRS014212       0       0
+DRS073469       0       1
 ```
