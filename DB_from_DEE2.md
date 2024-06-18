@@ -1,5 +1,7 @@
 ## Steps to build co-ex db from DEE2 datasets
 
+Steps in this document were done in Ubuntu 20 servers with 128GB memory. For human and mouse data, some steps may take up to more than 500GB memory.
+
 ### Processing the metadata file and aggregate the read counts
 
 The metadata tables made by DEE2 was used for the initial sample qualification. The following steps were done using Excel.
@@ -29,3 +31,27 @@ Points to be noticed:
 1. `athaliana_se.tsv.bz2` is the count file downloaded from the DEE2 database
 2. `ath_SRR_20240529.txt` is the SRR-SRS mapping (a two-column tab-delimited text file) with collected SRS accessions in above step1.
 3. The output file `ath_sel20240529.nMatrix.txt` is the raw count matrix, with columns for samples and rows for genes.
+
+### Duplicate removal
+
+Some samples (SRS) would be repeatedly submitted to the NCBI SRA database. The following steps were applied for removing duplications.
+
+```
+wdlin@comp01:SOMEWHERE/ath$ ../scripts/duplicateDetect.pl ath_sel20240529.nMatrix.txt > ath_sel20240529.nMatrix.dupReport
+
+wdlin@login02:SOMEWHERE/ath$ head ath_sel20240529.nMatrix.dupReport
+Reading matrix
+Compute hash
+Compare
+Report
+DUP: ERS1647356 ERS1827231
+DUP: ERS1647357 ERS1827232
+DUP: ERS1647358 ERS1827235
+DUP: ERS1647359 ERS1827236
+DUP: SRS1042458 SRS2817876
+DUP: SRS1121919 SRS2218890
+
+wdlin@comp01:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt | perl -ne 'chomp; s/^\s+|\s+$//g; @t=split; print "$_\n" for @t' | perl -ne 'chomp; if($.==1){ open(FILE,"<ath_sel20240529.nMatrix.dupReport"); while($line=<FILE>){ chomp $line; if($line=~/^DUP/){ @s=split(/\s+/,$line); shift @s; shift @s; for $x (@s){ $duplicate{$x}=1 } }} close FILE; print "$_\tnondup\n" }else{ print "$_\t"; if(exists $duplicate{$_}){ print "0\n" }else{ print "1\n" } }' > ath_sel20240529.dup.txt
+```
+
+The first command was to use the script `duplicateDetect.pl` (also in our `scripts` directory)
