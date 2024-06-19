@@ -49,7 +49,7 @@ We are making efforts on collecting read counts, postprocessing, and building da
 | arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.ALL.tar.gz.* | 19746 QC pass RNAseq samples, tissues not classified |
 | arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.Col0.tar.gz.* | 9094 QC pass Col-0 RNAseq samples, tissues classified |
 | worm | Caenorhabditis elegans | ce | coexDB_202406.ce.ALL.tar.gz.* | 5189 QC pass RNAseq samples, development stage classified |
-| worm | Caenorhabditis elegans | ce | coexDB_202406.ce.n2.tar.gz.* | 1934 QC pass RNAseq samples, development stage classified |
+| worm | Caenorhabditis elegans | ce | coexDB_202406.ce.n2.tar.gz.* | 1934 QC pass N2 RNAseq samples, development stage classified |
 | fly | Drosophila melanogaster | dm | - | 11485 QC pass RNAseq samples, in progress |
 | zebrafish | Danio rerio | dr | - | 3881 QC pass RNAseq samples, in progress |
 | bacteria | Escherichia coli | ec | - | 4284 QC pass RNAseq samples, in progress |
