@@ -4,7 +4,7 @@ This document contains steps for downloading specified SRS metadata and classifi
 
 ### Processing the metadata file and aggregate the read counts
 
-The metadata tables made by DEE2 was used for the initial sample qualification. The following steps were done using Excel.
+The [metadata tables made by DEE2](https://dee2.io/metadata/) was used for the initial sample qualification. The following steps were done using Excel.
 
 1. The metadata tables provide QC results of SRR accessions, which rather correspond to technical replicates. SRR's are the basic records in DEE2. To qualify biological replicates, i.e., SRS accessions, which also in the metadata tables, we collected SRS accessions where their corresponding SRR's were all PASS in the QC column.
 2. To collect count data associated with SRR's from the DEE2 database, we collected SRR accessions (i) under SRS accessions collected in step1, (ii) with `experiment_library_strategy` of `RNA-Seq`, and (iii) `experiment_library_selection` with `cDNA`, `RANDOM`, `PolyA`, or `Oligo-dT`.
