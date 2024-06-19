@@ -42,7 +42,7 @@ The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited
 
 #### Database collection
 
-We are making efforts on collecting read counts, postprocessing, and building database tables. We are now working on a few model species. Available updates of database files can be found at this [link](https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK) (cloud storage page of Academia Sinica).
+We are making efforts on collecting read counts, postprocessing, and building database tables. We are now working on a few model species. Available updates of database files can be found at this [link](https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK) (cloud storage page of Academia Sinica). Also see [our approaches](https://github.com/wdlingit/maccu/blob/main/DB_from_DEE2.md) for downloadeding specified SRS metadata and classifying samples.
 
 | common name | species | folder | .tar.gz (prefix) | comment |
 | -------- | ------- | ------- | ------- | ------- |
