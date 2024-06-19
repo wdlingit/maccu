@@ -7,12 +7,12 @@ This document contains steps for downloading specified SRS metadata and classifi
 The [metadata tables made by DEE2](https://dee2.io/metadata/) was used for the initial sample qualification. The following steps were done using Excel.
 
 1. The metadata tables provide QC results of SRR accessions, which rather correspond to technical replicates. SRR's are the basic records in DEE2. To qualify biological replicates, i.e., SRS accessions, which also in the metadata tables, we collected SRS accessions where their corresponding SRR's were all PASS in the QC column.
-2. To collect count data associated with SRR's from the DEE2 database, we collected SRR accessions (i) under SRS accessions collected in step1, (ii) with `experiment_library_strategy` of `RNA-Seq`, and (iii) `experiment_library_selection` with `cDNA`, `RANDOM`, `PolyA`, or `Oligo-dT`.
+2. To collect count data associated with SRR's from the DEE2 database, we collected SRR accessions (i) under SRS accessions collected in step 1, (ii) with `experiment_library_strategy` of `RNA-Seq`, and (iii) `experiment_library_selection` with `cDNA`, `RANDOM`, `PolyA`, or `Oligo-dT`.
 3. Save SRR-SRS mapping (two columns) into a tab-delimited text file.
 
-Download the count file and use the perl oneliner command like the following example to extract and aggregate read counts into biological replicates, i.e., SRS accessions.
+Download [the count file](https://dee2.io/mx/) and use the perl oneliner command like the following example to extract and aggregate read counts into biological replicates, i.e., SRS accessions.
 ```
-wdlin@login02:SOMEWHERE/ath$ head ath_SRR_20240529.txt
+wdlin@comp04:SOMEWHERE/ath$ head ath_SRR_20240529.txt
 DRR008476       DRS007600
 DRR008477       DRS007601
 DRR008478       DRS007602
@@ -37,9 +37,9 @@ Points to be noticed:
 Some samples (SRS) would be repeatedly submitted to the NCBI SRA database. The following steps were applied for removing duplications.
 
 ```
-wdlin@comp01:SOMEWHERE/ath$ ../scripts/duplicateDetect.pl ath_sel20240529.nMatrix.txt > ath_sel20240529.nMatrix.dupReport
+wdlin@comp04:SOMEWHERE/ath$ ../scripts/duplicateDetect.pl ath_sel20240529.nMatrix.txt > ath_sel20240529.nMatrix.dupReport
 
-wdlin@login02:SOMEWHERE/ath$ head ath_sel20240529.nMatrix.dupReport
+wdlin@comp04:SOMEWHERE/ath$ head ath_sel20240529.nMatrix.dupReport
 Reading matrix
 Compute hash
 Compare
@@ -116,13 +116,13 @@ biosampleRetrieve.pl <listFile> <outSrsBios> <outXML>
 Points to be noticed:
 1. The [NCBI EDirect utility](https://www.ncbi.nlm.nih.gov/books/NBK179288/) is required for running this script
 2. This script will write retrieved metadata XML into `<outXML>` and SRS-BioSample accession pairs into `<outSrsBios>`. You may use the line numbers in `<outSrsBios>` to check numbers of SRS records with successfully retrieved metadata.
-3. This script will *append* contents to the two output files, and it will process only SRS accessions not in `<outSrsBios>`. That is, you may simply repeat the same command a few number of times for retrieving metadata for the same list without taking care of the outputs. NOTE: It is possible that the NCBI contains no metadata for some SRS accessions. Just check those SRS accessions kept being searched for a number of times in the NCBI webpage.
-4. This script doesn't support parallel processing. You may apply a command like `split -l 2500 -d ath_sel20240529.list ath_sel20240529.list.` to split the list into files for parallel metadata retrieval (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
+3. This script will *append* contents to the two output files, and it will process only SRS accessions not in `<outSrsBios>`. That is, you may simply repeat the same command a few number of times for retrieving metadata for the same list without taking care of the outputs. NOTE: It is possible that the NCBI contains no metadata for some SRS accessions. Just mark those SRS accessions kept being searched for a number of times and check them in the NCBI webpage.
+4. This script doesn't support parallel processing. You may apply a command like `split -l 2500 -d ath_sel20240529.list ath_sel20240529.list.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
 5. Variable `$maxTry` was hard-coded as `3` for the number of re-try an `esearch` command. Modify it if needed.
-6. Inside the script, the first two `esearch` commands were used for retrieving the corresponding BioSample accession of a SRS accession. They are our current best practices for retrieving BioSample accessions from SRS accessions. Modify them if needed.
-7. The last `esearch` comand in the script was to extract metadata of the BioSample accession corresponding to a SRS accession. The reason that we extract metadata form BioSample but not SRA is that the metadata from BioSample is generally more detailed than that from SRA.
+6. Inside the script, the first two `esearch` commands were used for retrieving the corresponding BioSample accession of an SRS accession. They are our current best practices for retrieving BioSample accessions from SRS accessions. Modify them if needed.
+7. The last `esearch` comand in the script was to extract metadata of the BioSample accession corresponding to an SRS accession. The reason that we extract metadata form BioSample but not SRA is that the metadata from BioSample is generally more detailed than that from SRA.
 
-Again, it is possible that some SRS might retrieve no metadata. So we may apply a similar technique to remove them from the count matrix. (`ath_sel20240529.map` is the (merged) `<outSrsBios>` output file)
+Again, it is possible that we might retrieve no metadata for some SRS. So we may apply a similar technique to remove them from the count matrix. (`ath_sel20240529.map` is the (merged) `<outSrsBios>` output file)
 ```
 wdlin@comp04:SOMEWHERE/ath$ cat ath_sel20240529.map | perl -ne 'if($.==1){ print "SRS\tgot\n" } chomp; @t=split; print "$t[0]\t1\n"' > ath_sel20240529.gotMetadata
 
