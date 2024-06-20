@@ -317,3 +317,11 @@ coexDB_202406/ath/sel20240529.Col0.TMM.shoot    548
 coexDB_202406/ath/sel20240529.Col0.TMM.whole    527
 ```
 The last command is for numbers of data columns (samples) in the extracted matrixes.
+
+### Sample classification part 4 (optional), iteratively refine attributes & values for selection
+
+In above example, we started from one attrabute, collect *values* of our interests, decide *attributes*, and the use lastly adopted attributes and values for sample classification. Actually the process is flexible. For example, we can use those decided *attributes* to search more *values* for our decision. For example, the following perl oneliner was to use decided *attributes* (in file `dev1.txt`) to collect more *values* for making decision. Just remember to give an attribute file and a value file for generating a selection matrix.
+
+```
+wdlin@comp01:SOMEWHERE/dm$ cat dm_sel20240531.txt | perl -ne 'if($.==1){ open(FILE,"<extraction/dev1.txt"); while($line=<FILE>){ $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=1 if $s[-1] eq "TRUE" } close FILE; } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ print "$2\n" if exists $hash{$1} }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/dev2.xls
+```
