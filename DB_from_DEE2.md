@@ -327,3 +327,33 @@ wdlin@comp01:SOMEWHERE/dm$ cat dm_sel20240531.txt | perl -ne 'if($.==1){ open(FI
 ```
 
 ### Sample classification part 5 (optional), import customized logic into the selection
+
+Some coding approach could be applied because the above attribute-value selection method is simple for general scenario and may not fit some complex case. For example, for fly, strain K-12 and substrain mg1655 can both be values for attributes *strain* and *substrain*. In this case, a sample might be considered as both K12 and mg1655. This could be true to some people but some other might want to separate those K-12 samples without any substrain info from samples with specific strain/substrain mg1655. In this case, we can fix the selection matrix by coding.
+
+```
+wdlin@comp01:SOMEWHERE/ec$ head -10  extraction/ec_sel20240531.strain
+SRS     number  strain  mg1655  w3110   bw25113 ncm3722 K-12    b       rb001   ar3110  wo153   OR
+DRS200394       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200395       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200396       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200397       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200398       0       1       1       0       0       0       0       0       0       0       0       1
+ERS1139734      0       0       0       0       0       0       0       0       0       0       0       0
+ERS1146196      0       0       0       0       0       0       0       0       0       0       0       0
+ERS1203249      0       1       1       0       0       0       1       0       0       0       0       1
+ERS1203251      0       1       1       0       0       0       1       0       0       0       0       1
+
+wdlin@comp01:SOMEWHERE/ec$ head -10  extraction/ec_sel20240531.strain | perl -ne 'if($.==1){ print ; next } chomp; @t=split(/\t/); ($srs,$num,$strain,$mg1655,$w3110,$bw25113,$ncm3722,$k12,$b,$rb001,$ar3110,$wo153,$or)=@t; $k12=0 if ($mg1655 || $w3110 || $bw25113 || $ncm3722); @t=($srs,$num,$strain,$mg1655,$w3110,$bw25113,$ncm3722,$k12,$b,$rb001,$ar3110,$wo153,$or); print join("\t",@t)."\n"'
+SRS     number  strain  mg1655  w3110   bw25113 ncm3722 K-12    b       rb001   ar3110  wo153   OR
+DRS200394       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200395       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200396       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200397       0       1       1       0       0       0       0       0       0       0       0       1
+DRS200398       0       1       1       0       0       0       0       0       0       0       0       1
+ERS1139734      0       0       0       0       0       0       0       0       0       0       0       0
+ERS1146196      0       0       0       0       0       0       0       0       0       0       0       0
+ERS1203249      0       1       1       0       0       0       0       0       0       0       0       1
+ERS1203251      0       1       1       0       0       0       0       0       0       0       0       1
+```
+
+In this case, we previously considered mg1655, w3110, bw25113, ncm3722 as K-12 substrains and would like to make samples marked with these substrain not being marked by K-12 (ex: ERS1203249 and ERS1203251). So the perl oneliner was to transfer a column of values into values (`($srs,$num,$strain,$mg1655,$w3110,$bw25113,$ncm3722,$k12,$b,$rb001,$ar3110,$wo153,$or)=@t`) and make some simple logic (`$k12=0 if ($mg1655 || $w3110 || $bw25113 || $ncm3722)`). In so doing, the outputted selection matrix should exclude those samples with specified substrain info from K-12.
