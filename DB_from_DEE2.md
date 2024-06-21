@@ -325,3 +325,5 @@ In above example, we started from one attrabute, collect *values* of our interes
 ```
 wdlin@comp01:SOMEWHERE/dm$ cat dm_sel20240531.txt | perl -ne 'if($.==1){ open(FILE,"<extraction/dev1.txt"); while($line=<FILE>){ $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=1 if $s[-1] eq "TRUE" } close FILE; } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ print "$2\n" if exists $hash{$1} }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/dev2.xls
 ```
+
+### Sample classification part 5 (optional), import customized logic into the selection
