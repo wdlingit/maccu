@@ -42,41 +42,7 @@ The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited
 
 #### Database collection
 
-We are making efforts on collecting read counts, postprocessing, and building database tables. We are now working on a few model species. Available updates of database files can be found at this [link](https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK) (cloud storage page of Academia Sinica). Also see [our approaches](https://github.com/wdlingit/maccu/blob/main/DB_from_DEE2.md) for downloadeding specified SRS metadata and classifying samples.
 
-| common name | species | folder | .tar.gz (prefix) | comment |
-| -------- | ------- | ------- | ------- | ------- |
-| arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.ALL.tar.gz.* | 19746 QC pass RNAseq samples, tissues not classified |
-| arabidopsis | Arabidopsis thaliana | ath | coexDB_202406.ath.Col0.tar.gz.* | 9094 QC pass Col-0 RNAseq samples, tissues classified |
-| worm | Caenorhabditis elegans | ce | coexDB_202406.ce.ALL.tar.gz.* | 5189 QC pass RNAseq samples, development stage classified |
-| worm | Caenorhabditis elegans | ce | coexDB_202406.ce.n2.tar.gz.* | 1934 QC pass N2 RNAseq samples, development stage classified |
-| fly | Drosophila melanogaster | dm | - | 11485 QC pass RNAseq samples, in progress |
-| zebrafish | Danio rerio | dr | - | 3881 QC pass RNAseq samples, in progress |
-| bacteria | Escherichia coli | ec | - | 4284 QC pass RNAseq samples, in progress |
-| yeast | Saccharomyces cerevisiae | sc | - | 11571 QC pass RNAseq samples, in progress |
-
-*NOTE*: Due to file size limitation, files larger than 2GB were split into smaller files of the same prefix. All file splits are needed for extracting the database files. A (rather) convenient way to download specific files is to copy the file links from the cloud storage page and use `curl` as in the following example:
-
-```
-wdlin@comp06:somewhere$ curl -o coexDB_202406.ath.ALL.tar.gz.aa "https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK&path=%2Fath&files=coexDB_202406.ath.ALL.tar.gz.aa&download"
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 1900M  100 1900M    0     0  93.7M      0  0:00:20  0:00:20 --:--:--  103M
-
-wdlin@comp06:somewhere$ curl -o coexDB_202406.ath.ALL.tar.gz.ab "https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK&path=%2Fath&files=coexDB_202406.ath.ALL.tar.gz.ab&download"
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 1900M  100 1900M    0     0  98.0M      0  0:00:19  0:00:19 --:--:--  103M
-
-wdlin@comp06:somewhere$ curl -o coexDB_202406.ath.ALL.tar.gz.ac "https://myspace.sinica.edu.tw/public.php?service=files&t=jDXOZs51J0OP81ccJX86JeFpEXUvOlUGXJZZIr2c_VRVdwh7wQSLG7qEPFa5HBhK&path=%2Fath&files=coexDB_202406.ath.ALL.tar.gz.ac&download"
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 1165M  100 1165M    0     0   100M      0  0:00:11  0:00:11 --:--:--  104M
-
-wdlin@comp06:somewhere$ cat coexDB_202406.ath.ALL.tar.gz.* | tar xzvf -
-coexDB_202406/ath/README.txt
-coexDB_202406/ath/sel20240529.TMM
-```
 
 ### First execution of `OneStopWrapper.pl`
 It is OK to execute the script by specifying a full path or a relative path, and it is also OK to put its path into the PATH environment variable. Simple description of options will be displayed if no options entered.
