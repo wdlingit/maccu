@@ -42,7 +42,7 @@ The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited
 
 #### Database collection
 
-
+See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for updated databases for arabidopsis, worm, and fly.
 
 ### First execution of `OneStopWrapper.pl`
 It is OK to execute the script by specifying a full path or a relative path, and it is also OK to put its path into the PATH environment variable. Simple description of options will be displayed if no options entered.
