@@ -328,7 +328,7 @@ wdlin@comp01:SOMEWHERE/dm$ cat dm_sel20240531.txt | perl -ne 'if($.==1){ open(FI
 
 ### Sample classification part 5 (optional), import customized logic into the selection
 
-Some coding approach could be applied because the above attribute-value selection method is simple for general scenario and may not fit some complex case. For example, for fly, strain K-12 and substrain mg1655 can both be values for attributes *strain* and *substrain*. In this case, a sample might be considered as both K12 and mg1655. This could be true to some people but some other might want to separate those K-12 samples without any substrain info from samples with specific strain/substrain mg1655. In this case, we can fix the selection matrix by coding.
+Some coding approach could be applied because the above attribute-value selection method is simple for general scenario and may not fit some complex cases. For example, for fly, strain K-12 and substrain mg1655 can both be values for attributes *strain* and *substrain*. In this case, a sample might be considered as both K12 and mg1655. This could be true to some people but some other might want to separate those K-12 samples without any substrain info from samples with specific strain/substrain info of mg1655. In this case, we can fix the selection matrix by coding.
 
 ```
 wdlin@comp01:SOMEWHERE/ec$ head -10  extraction/ec_sel20240531.strain
