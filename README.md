@@ -1,6 +1,10 @@
 ## Multi-Array Correl. Computation Utility
 This respository is currently for describing the `OneStopWrapper.pl` of [maccu](https://maccu.sourceforge.net/index.html), which performs co-expression clustering in one command. In this document, we also present the use of a co-expression database of Arabidopsis Col-0 RNAseq samples made based on data from [DEE2](https://dee2.io/).
 
+#### Database collection
+
+See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for updated databases for arabidopsis, worm, fly, and bacteria.
+
 ### Installation requirement
 It should be feasible to run `OneStopWrapper.pl` in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an ubuntu20 VM with 16GB ram to run all commands.
 
@@ -39,10 +43,6 @@ coexDB20230714/ath/Col0/sel20210116.col0.TMM.whole
 ```
 
 The files named `sel20210116.col0.TMM.*` are our database files in tab-delimited text format. They are all read count matrix normalized by the TMM method (PMID: 20196867). Their columns are samples and rows are genes. The one suffixed by `ALL` are composed of 5556 Arabidopsis Col-0 RNAseq samples, which were selected from the DEE2 database following a series of considerations. All other database files are extracted portions of this `ALL` file, where the extracted portions were decided by parsing metadata download from NCBI. For example, the `root` one is composed of root samples. For another example, the `whole` one is composed of samples using _whole plants_.
-
-### Database collection
-
-See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for updated databases for arabidopsis, worm, fly, and bacteria.
 
 ### First execution of `OneStopWrapper.pl`
 It is OK to execute the script by specifying a full path or a relative path, and it is also OK to put its path into the PATH environment variable. Simple description of options will be displayed if no options entered.
