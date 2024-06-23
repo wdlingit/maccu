@@ -228,7 +228,7 @@ landsberg erecta        223     FALSE
 col-0 (cs70000) 106     TRUE
 bay x sha ril   83      FALSE
 columbia (col-0)        81      TRUE
-columbia (efo_0005147)  75      TRUE
+columbia (efo_0005147)  75      FALSE
 ```
 
 So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 value for every sample. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS014211 and DRS014212 are the first two SRS accessions considered not related with col-0. Note that our approach might not be fully accruate, but classified samples would be based on specific attributes and specific values in the metadata file.
