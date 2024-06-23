@@ -306,13 +306,14 @@ Given that we have the normalized log-count-per-million matrix of only col-0 sam
 wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_SRS_20240529.tissue coexDB_202406/ath/sel20240529.Col0.TMM coexDB_202406/ath/sel20240529.Col0.TMM leaf rosette root shoot flower seedling seed whole
 
 wdlin@comp04:SOMEWHERE/ath$ find coexDB_202406/ath/ | perl -ne 'chomp; next if -d "$_"; print "$_\n"' | perl -ne 'chomp; $msg=`head -1 $_`; chomp $msg; @t=split(/\t/,$msg); $cnt=@t; $cnt--; print "$_\t$cnt\n"'
-coexDB_202406/ath/sel20240529.Col0.TMM  9094
-coexDB_202406/ath/sel20240529.Col0.TMM.flower   247
-coexDB_202406/ath/sel20240529.Col0.TMM.leaf     2090
+coexDB_202406/ath/sel20240529.TMM       19746
+coexDB_202406/ath/sel20240529.Col0.TMM  9060
+coexDB_202406/ath/sel20240529.Col0.TMM.flower   242
+coexDB_202406/ath/sel20240529.Col0.TMM.leaf     2072
 coexDB_202406/ath/sel20240529.Col0.TMM.root     1084
 coexDB_202406/ath/sel20240529.Col0.TMM.rosette  587
 coexDB_202406/ath/sel20240529.Col0.TMM.seed     323
-coexDB_202406/ath/sel20240529.Col0.TMM.seedling 2865
+coexDB_202406/ath/sel20240529.Col0.TMM.seedling 2854
 coexDB_202406/ath/sel20240529.Col0.TMM.shoot    548
 coexDB_202406/ath/sel20240529.Col0.TMM.whole    527
 ```
