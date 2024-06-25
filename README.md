@@ -3,7 +3,7 @@ This respository is currently for describing the `OneStopWrapper.pl` of [maccu](
 
 #### Database collection
 
-See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for updated databases for arabidopsis, worm, fly, zebrafish, bacteria, and yeast.
+See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for updated databases for *arabidopsis*, *worm*, *fly*, *zebrafish*, *bacteria*, and *yeast*.
 
 ### Installation requirement
 It should be feasible to run `OneStopWrapper.pl` in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an ubuntu20 VM with 16GB ram to run all commands.
