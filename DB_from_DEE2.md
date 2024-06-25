@@ -120,7 +120,7 @@ Points to be noticed:
 4. This script doesn't support parallel processing. You may apply a command like `split -l 2500 -d ath_sel20240529.list ath_sel20240529.list.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
 5. Variable `$maxTry` was hard-coded as `3` for the number of re-try an `esearch` command. Modify it if needed.
 6. Inside the script, the first two `esearch` commands were used for retrieving the corresponding BioSample accession of an SRS accession. They are our current best practices for retrieving BioSample accessions from SRS accessions. Modify them if needed.
-7. The last `esearch` comand in the script was to extract metadata of the BioSample accession corresponding to an SRS accession. The reason that we extract metadata form BioSample but not SRA is that the metadata from BioSample is generally more detailed than that from SRA.
+7. The last `esearch` command in the script was to extract metadata of the BioSample accession corresponding to an SRS accession. The reason that we extract metadata form BioSample but not SRA is that the metadata from BioSample is generally more detailed than that from SRA.
 
 Again, it is possible that we might retrieve no metadata for some SRS. So we may apply a similar technique to remove them from the count matrix. (`ath_sel20240529.map` is the (merged) `<outSrsBios>` output file)
 ```
