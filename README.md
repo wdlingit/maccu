@@ -136,7 +136,7 @@ The following picture was made by importing root.DEG.0.70.xgmml into Cytoscape a
 
 ![root.DEG.0.70](example/deg/root.DEG.0.70.xgmml.png)
 
-### Run the second example
+### A time-course and tissue specific example
 The `timecourse` directory contains four files, `797genes.txt` for the gene list and the three files for log2-fold-changes in different time points. They are from the time course experiment of PMID: 21248074.
 ```
 ubuntu@maccu:~/maccu/example/deg$ cd ../timecourse/
@@ -226,7 +226,7 @@ The followig picture was made by importing root.DEG.0.90.xgmml to Cytoscape, whe
 The following picture was made by importing specific.0.90.xgmml to Cytoscape, which was computed by `root.DEG.0.90 - ALL.DEG.0.80`. The three subpictures were colored based on `t01`, `t06`, and `t24` (from left to right), respectively.
 ![specific.0.90](example/timecourse/specific.0.90.png)
 
-### Run the fishing example
+### A fishing example
 By default, `-method` is set as `maccu.RelationComputer`, which was used for computing relationships between input genes. To discover relatioinships between input genes and all other genes, we will have to set `-method` to `maccu.CoExpressFishing`. In this example, we go to the `fishing` directory and use the `bait.txt` file as the input.
 ```
 ubuntu@maccu:~/maccu/example/timecourse$ cd ../fishing/
