@@ -1,6 +1,10 @@
 ## Multi-Array Correl. Computation Utility
 This respository is currently for describing the `OneStopWrapper.pl` of [maccu](https://maccu.sourceforge.net/index.html), which performs co-expression clustering in one command. In this document, we also present the use of a co-expression database of Arabidopsis Col-0 RNAseq samples made based on data from [DEE2](https://dee2.io/).
 
+### The general idea
+
+![The general idea](https://github.com/wdlingit/maccu/blob/main/pic/README_01.png)
+
 #### Database collection
 
 See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for updated databases for *arabidopsis*, *worm*, *fly*, *zebrafish*, *bacteria*, and *yeast*. Also see [our approaches](https://github.com/wdlingit/maccu/blob/main/DB_from_DEE2.md) for downloadeding specified SRS metadata and classifying samples.
