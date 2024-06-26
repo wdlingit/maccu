@@ -3,7 +3,7 @@ This respository is currently for describing the `OneStopWrapper.pl` of [maccu](
 
 ### The general idea
 
-![The general idea](https://github.com/wdlingit/maccu/blob/main/pic/README_01.png)
+![The general idea](https://github.com/wdlingit/maccu/blob/main/pic/README_01.jpg)
 
 #### Database collection
 
