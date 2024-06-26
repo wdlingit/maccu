@@ -140,7 +140,7 @@ The following picture was made by importing root.DEG.0.70.xgmml into Cytoscape a
 
 ![root.DEG.0.70](example/deg/root.DEG.0.70.xgmml.png)
 
-### A time-course and tissue specific example
+### A time-course and tissue-specific example
 The `timecourse` directory contains four files, `797genes.txt` for the gene list and the three files for log2-fold-changes in different time points. They are from the time course experiment of PMID: 21248074.
 ```
 ubuntu@maccu:~/maccu/example/deg$ cd ../timecourse/
