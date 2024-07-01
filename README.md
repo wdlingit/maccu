@@ -20,7 +20,7 @@ ubuntu@maccu:~$ sudo apt install openjdk-11-jre-headless
 
 Downlaod the wrapper package and extract it. Must be sure to keep extracted files been placed under the same directory.
 ```
-ubuntu@maccu:~$ wget https://downloads.sourceforge.net/project/maccu/0.8/maccuWrapper.tar.gz
+ubuntu@maccu:~$ wget https://downloads.sourceforge.net/project/maccu/0.8a/maccuWrapper.tar.gz
 ubuntu@maccu:~$ tar -zxvf maccuWrapper.tar.gz
 ```
 
