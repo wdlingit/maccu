@@ -10,7 +10,7 @@ See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for upd
 ![The general idea](https://github.com/wdlingit/maccu/blob/main/pic/README_01.jpg)
 
 ### Installation requirement
-It should be feasible to run `OneStopWrapper.pl` in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an ubuntu20 VM with 16GB ram to run all commands.
+It should be feasible to run `OneStopWrapper.pl` in recent linux distributions. The only requirement is java runtime environment greater than or equal to 8. In this document, we use an Ubuntu20 VM with 16GB ram to run all commands. All steps were also tested in WSL Ubuntu20 of a 16GB RAM Windows 11 PC.
 
 Install java runtime environment.
 ```
