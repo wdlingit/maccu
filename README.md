@@ -81,7 +81,7 @@ ubuntu@maccu:~/maccu/example/deg$ ls
 foldchange.txt  genelist.txt
 ```
 
-The `deg` directory contains two files, they are from experiment data of PMID: 20181752. The `genelist.txt` file contains simply gene IDs in AGI accessions. The `foldchange.txt` file is in tab-delimited format, where the first column is for gene IDs and the second column is for fold-chagne values. It is strongly suggested to use fold-change in log scale as the fold-change values because that could be handled easily in Cytoscape.
+The `deg` directory contains two files, they are from experiment data of PMID: 20181752. The `genelist.txt` file contains simply gene IDs in AGI accessions. The `foldchange.txt` file is in tab-delimited format, where the first column is for gene IDs and the second column is for fold-chagne values. It is strongly suggested to use fold-change in log scale as the fold-change values because that could be handled easily in [Cytoscape](https://cytoscape.org/).
 
 Since the experiment is for studying Arabidopsis roots and the initial analysis (of arrays) discovered 187 genes showed differential expression, it is of our interests to figure out potential co-expression modules inside the 187 genes. To do that, we use the database of root samples to infer potential co-expression modules.
 ```
@@ -93,7 +93,7 @@ ubuntu@maccu:~/maccu/example/deg$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
 Points to be noticed:
 1. `-input` is used to set the input gene list file `genelist.txt` and its alias `DEG`.
 2. `-dbase` is uesed to set the database file to for co-expression clustering, as well as its alias in this computation. Note that the database files must be assigned with absolute paths.
-3. `-fold` is used to associate specified fold-change values to attribute `foldchange` of nodes in the final XGMML files. XGMML files can be imported into Cytoscape and it should be easy to fill node color according to node attributes. `-fold` is actually optional; that is, this can be omitted.
+3. `-fold` is used to associate specified fold-change values to attribute `foldchange` of nodes in the final XGMML files. XGMML files can be imported into [Cytoscape](https://cytoscape.org/) and it should be easy to fill node color according to node attributes. `-fold` is actually optional; that is, this can be omitted.
 
 The execution should be finished with the following lines in the screen.
 ```
@@ -132,11 +132,11 @@ coex/root.DEG.0.95.xgmml
 
 There are two kinds of files been outputted:
 1. `.graph`: tab-delimited text files, representing graphs in [adjacency list](https://en.wikipedia.org/wiki/Adjacency_list) format. Each line represents one node (the first token) and edges connecting to it (other token, where numbers in parentheses are correlations).
-2. `.xgmml`: [XGMML](https://en.wikipedia.org/wiki/XGMML) files. These files can be imported into Cytoscape use its `File->Import->Network from File` function. In so doing, correlations between edges would be saved as `weight` attributes of edges in Cytoscape.
+2. `.xgmml`: [XGMML](https://en.wikipedia.org/wiki/XGMML) files. These files can be imported into [Cytoscape](https://cytoscape.org/) use its `File->Import->Network from File` function. In so doing, correlations between edges would be saved as `weight` attributes of edges in [Cytoscape](https://cytoscape.org/).
 
 Note that the files were named in the format `<database>.<gene set>.<threshold>`, where each file represents edges been recognized by using `<database>` between genes in `<gene set>` that are above `<threshold>` (in terms of correlation). In this naming scheme, we can apply options `-input` and `-dbase` multiple times with different aliases and perform all combinations of computations in one execution. By the way, the default threshold series is 0.95, 0.90, 0.85, ... 0.70 and this can be adjusted by applying the `-thresh` option.
 
-The following picture was made by importing root.DEG.0.70.xgmml into Cytoscape and setting continuous mapping on node filling colors with attribute `foldchange`.
+The following picture was made by importing root.DEG.0.70.xgmml into [Cytoscape](https://cytoscape.org/) and setting continuous mapping on node filling colors with attribute `foldchange`.
 
 ![root.DEG.0.70](example/deg/root.DEG.0.70.xgmml.png)
 
@@ -224,10 +224,10 @@ coex/specific.0.95.xgmml
 
 The two options `-graphAdjStr` and `-graphAdjShift` are related with the above described graph-level operation. `-graphAdjStr` is used for specifying operand networks in the computation, in terms of `<db1>.<set1>` vs `<db2>.<set2>`. The `<threshold>` part of generated networks is the series of 0.95, 0.90, 0.85, and 0.80 (assigned by `-thresh`). `-graphAdjShift` is used for dealiing with the `<threshold>` part in the graph-level computation. It specifies the _threshold shift_ between `<db1>.<set1>` ve `<db2>.<set2>`. In this example, we would like to compute `root.DEG.0.95 - ALL.DEG.0.85` and `root.DEG.0.9 - ALL.DEG.0.8` as the *threshold step* is 0.05 (specified by `-thresh`). The threshold difference between network operands is 0.1, which is twice of the *threshold step*, so we set `-graphAdjShift 2`. As a result, there will be a number of .graph files and XGMML files prefixed by "specific" (specified by `-graphAdjStr`) made by the graph-level operation.
 
-The followig picture was made by importing root.DEG.0.90.xgmml to Cytoscape, where the coloring was based on `t01`.
+The followig picture was made by importing root.DEG.0.90.xgmml to [Cytoscape](https://cytoscape.org/), where the coloring was based on `t01`.
 ![root.DEG.0.90_t01](example/timecourse/root.DEG.0.90_t01.png)
 
-The following picture was made by importing specific.0.90.xgmml to Cytoscape, which was computed by `root.DEG.0.90 - ALL.DEG.0.80`. The three subpictures were colored based on `t01`, `t06`, and `t24` (from left to right), respectively.
+The following picture was made by importing specific.0.90.xgmml to [Cytoscape](https://cytoscape.org/), which was computed by `root.DEG.0.90 - ALL.DEG.0.80`. The three subpictures were colored based on `t01`, `t06`, and `t24` (from left to right), respectively.
 ![specific.0.90](example/timecourse/specific.0.90.png)
 
 ### A fishing example
@@ -256,5 +256,5 @@ Points to be noticed:
 2. `-inputParam "-STEP 1"` to transfer the parameter `"-STEP 1"` to `maccu.CoExpressFishing` so that the fishing procedre would go only depth 1.
 3. `-fold bait bait.txt` so that node attribute `bait` of AT5G13630 will be 1.
 
-The followig picture was made by importing root.bait.0.80.xgmml to Cytoscape. Note that AT5G13630 was marked red via the `bait` node attribute.
+The followig picture was made by importing root.bait.0.80.xgmml to [Cytoscape](https://cytoscape.org/). Note that AT5G13630 was marked red via the `bait` node attribute.
 ![root.bait.0.80](example/fishing/root.bait.0.80.xgmml.png)
