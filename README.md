@@ -92,7 +92,7 @@ ubuntu@maccu:~/maccu/example/deg$ /home/ubuntu/maccuWrapper/OneStopWrapper.pl \
 ```
 Points to be noticed:
 1. `-input` is used to set the input gene list file `genelist.txt` and its alias `DEG`.
-2. `-dbase` is uesed to set the database file to for co-expression clustering, as well as its alias in this computation. Note that the database files must be assigned with absolute paths.
+2. `-dbase` is uesed to set the database file for co-expression clustering, as well as its alias in this computation. Note that the database files must be assigned with absolute paths.
 3. `-fold` is used to associate specified fold-change values to attribute `foldchange` of nodes in the final XGMML files. XGMML files can be imported into [Cytoscape](https://cytoscape.org/) and it should be easy to fill node color according to node attributes. `-fold` is actually optional; that is, this can be omitted.
 
 The execution should be finished with the following lines in the screen.
