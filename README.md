@@ -3,6 +3,8 @@ This respository is currently for describing the `OneStopWrapper.pl` of [maccu](
 
 #### Database collection
 
+*NOTE* (by 20260317): database files recently migrated to [depositar](https://data.depositar.io/en/).
+
 See [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202406.md) for updated databases for *arabidopsis*, *worm*, *fly*, *zebrafish*, *bacteria*, and *yeast*. Also see [our approaches](https://github.com/wdlingit/maccu/blob/main/DB_from_DEE2.md) for downloadeding specified SRS metadata and classifying samples.
 
 ### The general idea
