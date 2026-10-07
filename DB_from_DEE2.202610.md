@@ -39,7 +39,7 @@ runinfoRetrieve.pl <srrList> <processed> <outCSV>
 ```
 Points to be noticed:
 1. The [NCBI EDirect utility](https://www.ncbi.nlm.nih.gov/books/NBK179288/) is required for running this script
-2. This script will write retrieved metadata in CSV format into `<outCSV>` and processed SRR's `<processed>`. You may use the line numbers in `<processed>` to check numbers of SRR records with successfully retrieved metadata.
+2. This script will write retrieved metadata in CSV format into `<outCSV>` and processed SRR's into `<processed>`. You may use the line numbers in `<processed>` to check numbers of SRR records with successfully retrieved metadata.
 3. This script will *append* contents to the two output files, and it will process only SRR accessions not in `<processed>`. That is, you may simply repeat the same command a few times for retrieving metadata for the same SRR list without taking care of the outputs. NOTE: It is possible that the NCBI contains no metadata for some SRR accessions. Just remove those SRR accessions kept being searched for a number of times and check them in the NCBI webpage.
 4. This script doesn't support parallel processing. You may apply a command like `split -l 6025 SRS_SRR.allpass.SRR SRS_SRR.allpass.SRR.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
 5. Variable `$maxTry` was hard-coded as `3` for the number of re-try an `efetch` command.
