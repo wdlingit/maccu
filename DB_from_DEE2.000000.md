@@ -2,6 +2,8 @@
 
 This document contains steps for downloading specified SRS metadata and classification of samples. Steps in this document were done in a Ubuntu 20 server with 128GB memory. For human and mouse data, some steps may take up to more than 500GB memory.
 
+**NOTE**: This document is describing our approach around 202405.
+
 ### Processing the metadata file and aggregate the read counts
 
 The [metadata tables made by DEE2](https://dee2.io/metadata/) was used for the initial sample qualification. The following steps were done using Excel.
