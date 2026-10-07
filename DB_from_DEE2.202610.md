@@ -87,7 +87,7 @@ wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ wc -l SRS_SRR.selected
 40363 SRS_SRR.selected
 ```
 
-Download [the count file](https://dee2.io/mx/) and use the `SRS_aggr.R` (in our `scripts` directory, requires the `rhdf5` library) to aggregate read counts into biological replicates, i.e., SRS accessions.
+Download [the count file](https://dee2.io/mx/) and use the `SRS_aggr.R` script (in our `scripts` directory, requires the `rhdf5` library) to aggregate read counts into biological replicates, i.e., SRS accessions.
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head SRS_SRR.selected
 DRR008476       DRS007600
