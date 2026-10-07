@@ -1,13 +1,29 @@
 #!/usr/bin/env perl
 
-my $usage = "biosampleRetrieve.pl <listFile> <outSrsBios> <outXML>\n";
+my $usage = "biosampleRetrieveBySRS.pl <listFile> <outSrsBios> <outXML>\n";
 
+my $hintFile = "";
+my $maxTry = 3;
+
+# retrieve optional parameter
+my @arg_idx=(0..@ARGV-1);
+for my $i (0..@ARGV-1) {
+    if ($ARGV[$i] eq '-hint') {
+        $hintFile=$ARGV[$i+1];
+        delete @arg_idx[$i,$i+1];
+    }elsif ($ARGV[$i] eq '-maxtry') {
+        $maxTry=$ARGV[$i+1];
+        delete @arg_idx[$i,$i+1];
+    }
+}
+my @new_arg;
+for (@arg_idx) { push(@new_arg,$ARGV[$_]) if (defined($_)); }
+@ARGV=@new_arg;
+
+# regular parameters
 my $listFilename = shift or die $usage;
 my $outSrsBios = shift or die $usage;
 my $outXML     = shift or die $usage;
-my $skipTo = shift;
-
-my $maxTry = 3;
 
 # read list
 open(FILE,"<$listFilename");
@@ -19,20 +35,29 @@ while(<FILE>){
 }
 close FILE;
 
+# read hint if specified
+my %hintHash = ();
+if(length($hintFile)){
+    open(FILE,"<$hintFile");
+    while(<FILE>){
+        chomp;
+        my @t=split;
+        $hintHash{$t[0]} = $t[1];
+    }
+    close FILE;
+}
+
 # read outSrsBios for existing records for skipping them
 my %finished;
 open(FILE,"<$outSrsBios");
 while(<FILE>){
-    @t=split;
+    chomp;
+    my @t=split;
     $finished{$t[0]}=1;
 }
 close FILE;
 
 # iterate list
-my $startIteration = 0;
-if(not defined $skipTo){
-    $startIteration = 1;
-}
 open(FILE1,">>$outSrsBios");
 open(FILE2,">>$outXML");
 for my $acc (@accArr){
@@ -41,6 +66,9 @@ for my $acc (@accArr){
     print "RETRIEVE: $acc\n";
 
     $biosAcc = "";
+    if(exists $hintHash{$acc}){
+        $biosAcc = $hintHash{$acc};
+    }
     for($tryNum=0; $tryNum<$maxTry && length($biosAcc)==0; $tryNum++){ # ATTEMPT 1
         $biosAcc = `esearch -db sra -query $acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -if Identifiers -contains $acc -block Id -if \@db -equals BioSample -element Id`;
         chomp $biosAcc;

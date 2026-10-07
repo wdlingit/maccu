@@ -13,7 +13,7 @@ while($line=<FILE>){
     chomp $line;
     $line=~s/^\s+|\s+$//g;
     my @s=split(/\t/,$line);
-    $attrHash{$s[0]}=0 if $s[-1] eq "TRUE";
+    $attrHash{$s[0]}=0 if $s[-1]==1;
 } close FILE;
 
 # read value file
@@ -36,7 +36,7 @@ while($line=<FILE>){
     $line=~s/^\s+|\s+$//g;
     my @s=split(/\t/,$line);
     for(my $i=1;$i<@s;$i++){
-        $valHash{lc($s[0])}{$idxTargetHash{$i}}=0 if $s[$i] eq "TRUE";
+        $valHash{lc($s[0])}{$idxTargetHash{$i}}=0 if $s[$i]==1;
     }
 }
 close FILE;
