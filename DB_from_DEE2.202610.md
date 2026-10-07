@@ -2,17 +2,94 @@
 
 This document contains steps for downloading specified SRS metadata and classification of samples. Steps in this document were done in a Ubuntu 20 server with 128GB memory. For human and mouse data, some steps may take up to more than 500GB memory.
 
+**NOTE**: The difference between this version and [the last version](https://github.com/wdlingit/maccu/blob/main/DB_from_DEE2.000000.md) is that ALL manual Excel operations were replaced by perl codes. TRUE and FALSE values used in Excel were replaced by 1's and 0's.
+
 ### Processing the metadata file and aggregate the read counts
 
-The [metadata tables made by DEE2](https://dee2.io/metadata/) was used for the initial sample qualification. The following steps were done using Excel.
+The [metadata tables made by DEE2](https://dee2.io/metadata/) were used for the initial sample qualification. In this document, we use `athaliana_metadata.tsv` for describing the methods.
 
-1. The metadata tables provide QC results of SRR accessions, which rather correspond to technical replicates. SRR's are the basic records in DEE2. To qualify biological replicates, i.e., SRS accessions, which also in the metadata tables, we collected SRS accessions where their corresponding SRR's were all PASS in the QC column.
-2. To collect count data associated with SRR's from the DEE2 database, we collected SRR accessions (i) under SRS accessions collected in step 1, (ii) with `experiment_library_strategy` of `RNA-Seq`, and (iii) `experiment_library_selection` with `cDNA`, `RANDOM`, `PolyA`, or `Oligo-dT`.
-3. Save SRR-SRS mapping (two columns) into a tab-delimited text file.
-
-Download [the count file](https://dee2.io/mx/) and use the perl oneliner command like the following example to extract and aggregate read counts into biological replicates, i.e., SRS accessions.
 ```
-wdlin@comp04:SOMEWHERE/ath$ head ath_SRR_20240529.txt
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ wget https://dee2.io/metadata/athaliana_metadata.tsv
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head -1 athaliana_metadata.tsv | perl -ne 'chomp; @t=split; for($i=0;$i<@t;$i++){ print "$i\t$t[$i]\n" }'
+0       SRR_accession
+1       QC_summary
+2       SRX_accession
+3       SRS_accession
+4       SRP_accession
+5       GEO_series
+6       Experiment_title
+```
+The metadata tables provide QC results of SRR accessions, which rather correspond to technical replicates. SRR's are the basic records in DEE2. To qualify biological replicates, i.e., SRS accessions, which also in the metadata tables, we collected SRS accessions where their corresponding SRR's were all PASS in the QC column.
+
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat athaliana_metadata.tsv | perl -ne 'next if $.==1; chomp; @t=split; $srsHash{$t[3]}{$t[0]}=1; if($t[1]=~/pass/i){ $srrPassHash{$t[0]}=1 }else{ $srrPassHash{$t[0]}=0 } if(eof){ ($cnt,$pCnt,$fCnt)=(0,0,0); for $k (keys %srrPassHash){ $cnt++; if($srrPassHash{$k}){ $pCnt++; }else{ $fCnt++; } } print "SRR: $cnt\t$pCnt\t$fCnt\n"; ($cnt,$pCnt,$fCnt)=(0,0,0); for $k1 (keys %srsHash){ $cnt++; $flag=1; for $k2 (keys %{$srsHash{$k1}}){ $flag=0 if $srrPassHash{$k2}==0; } if($flag){ $pCnt++; }else{ $fCnt++; } } print "SRS: $cnt\t$pCnt\t$fCnt\n"; }'
+SRR: 119477     50063   69414
+SRS: 90960      44495   46465
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat athaliana_metadata.tsv | perl -ne 'next if $.==1; chomp; @t=split; $srsHash{$t[3]}{$t[0]}=1; if($t[1]=~/pass/i){ $srrPassHash{$t[0]}=1 }else{ $srrPassHash{$t[0]}=0 } if(eof){ for $k1 (sort keys %srsHash){ $flag=1; for $k2 (keys %{$srsHash{$k1}}){ $flag=0 if $srrPassHash{$k2}==0; } if($flag){ for $k2 (sort keys %{$srsHash{$k1}}){ print "$k1\t$k2\n" } } } }' > SRS_SRR.allpass
+```
+In above, the first perl one-liner showed total, pass, and non-pass numbers of SRR's, as well as, total, all-pass, non-all-pass numbers of SRS's. Here we have 44495 SRS's with all-pass SRR's. The second perl one-liner saved SRS-SRR pairs of all-pass SRS's.
+
+To collect SRS's that are belonging to RNAseq samples, we need metadata info in addition to those provided in `athaliana_metadata.tsv`. Script `runinfoRetrieve.pl` (in our `scripts` directory) was used for retriving metadata of SRR's from NCBI.
+
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/runinfoRetrieve.pl
+runinfoRetrieve.pl <srrList> <processed> <outCSV>
+```
+Points to be noticed:
+1. The [NCBI EDirect utility](https://www.ncbi.nlm.nih.gov/books/NBK179288/) is required for running this script
+2. This script will write retrieved metadata in CSV format into `<outCSV>` and processed SRR's `<processed>`. You may use the line numbers in `<processed>` to check numbers of SRR records with successfully retrieved metadata.
+3. This script will *append* contents to the two output files, and it will process only SRR accessions not in `<processed>`. That is, you may simply repeat the same command a few times for retrieving metadata for the same SRR list without taking care of the outputs. NOTE: It is possible that the NCBI contains no metadata for some SRR accessions. Just remove those SRR accessions kept being searched for a number of times and check them in the NCBI webpage.
+4. This script doesn't support parallel processing. You may apply a command like `split -l 6025 SRS_SRR.allpass.SRR SRS_SRR.allpass.SRR.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
+5. Variable `$maxTry` was hard-coded as `3` for the number of re-try an `efetch` command.
+6. Variable `$chunkSize` was hard-coded as `100` so that every 100 SRR accessions would be queried by one single command. This would largely improve the query efficiency. In our experiences, 6000 SRRs would took only a few minutes.
+
+Assuming that `SRS_SRR.allpass.SRR` is for the SRR list and `SRS_SRR.allpass.SRR.out` is the output CSV file of `runinfoRetrieve.pl`. The next perl one-liner extracts `LibraryStrategy`, `LibrarySource`, `LibrarySelection`, `Sample`, and `BioSample` from the CSV output. Note that it requires the `Text::CSV` perl module.
+
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat SRS_SRR.allpass.SRR.out | perl -MText::CSV -ne 'if($.==1){ open(FILE,"<SRS_SRR.allpass.SRR"); while($line=<FILE>){ chomp $line; $hash{$line}=1; } close FILE; @attrArr=("LibraryStrategy","LibrarySource","LibrarySelection","Sample","BioSample"); $csv=Text::CSV->new({ binary => 1, auto_diag => 1 }); } chomp; if($csv->parse($_)){ @t=$csv->fields }else{ die "ERROR: $_\n" } if($t[0] eq "Run"){ %idxHash=(); for($i=0;$i<@t;$i++){ $idxHash{$t[$i]}=$i } }elsif(exists $hash{$t[0]}){ print "$t[0]"; for $k (@attrArr){ if(exists $idxHash{$k}){ print ",$t[$idxHash{$k}]" }else{ print "," } } print "\n" }' | sort | uniq > SRS_SRR.allpass.SRR.info
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head SRS_SRR.allpass.SRR.info
+DRR008476,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS007600,SAMD00009103
+DRR008477,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS007601,SAMD00009101
+DRR008478,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS007602,SAMD00009102
+DRR016112,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS014211,SAMD00013248
+DRR016113,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS014211,SAMD00013248
+DRR016114,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS014212,SAMD00013247
+DRR016115,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS014212,SAMD00013247
+DRR016116,RNA-Seq,TRANSCRIPTOMIC,cDNA,DRS014212,SAMD00013247
+DRR018424,RNA-Seq,TRANSCRIPTOMIC,unspecified,DRS016105,SAMD00015876
+DRR021335,RNA-Seq,TRANSCRIPTOMIC,RANDOM,DRS030798,SAMD00018417
+```
+
+There are some SRS accessions been submitted with multiple *library strategies* and/or *library selections*. They were excluded for safty.
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat bck/SRS_SRR.allpass.SRR.info | perl -ne 'if($.==1){ open(FILE,"<SRS_SRR.allpass"); while($line=<FILE>){ chomp $line; @s=split(/\s+/,$line); $hash{$s[1]}=$s[0]; } close FILE } chomp; @t=split(/,/,$_,-1); unshift @t,$hash{$t[0]}; print join("\t",@t)."\n";' | perl -ne 'chomp; @t=split; $lineHash{$t[1]}=$_; $srrHash{$t[1]}=$t[0]; $hash2{$t[0]}{$t[2]}=1; $hash3{$t[0]}{$t[3]}=1; $hash4{$t[0]}{$t[4]}=1; if(eof){ for $k (sort keys %lineHash){ $cnt2=keys %{$hash2{$srrHash{$k}}}; $cnt3=keys %{$hash3{$srrHash{$k}}}; $cnt4=keys %{$hash4{$srrHash{$k}}}; print "$lineHash{$k}\t$cnt2\t$cnt3\t$cnt4\n"; } }' | perl -ne '@t=split; print if $t[-3]>1 || $t[-2]>1 || $t[-1]>1' | sort | head
+DRS235147       DRR221886       OTHER   TRANSCRIPTOMIC  cDNA    DRS235147       SAMD00218963    2       1       1
+DRS235147       DRR221902       RNA-Seq TRANSCRIPTOMIC  cDNA    DRS235147       SAMD00218963    2       1       1
+DRS235148       DRR221887       OTHER   TRANSCRIPTOMIC  cDNA    DRS235148       SAMD00218964    2       1       1
+DRS235148       DRR221903       RNA-Seq TRANSCRIPTOMIC  cDNA    DRS235148       SAMD00218964    2       1       1
+DRS235149       DRR221888       OTHER   TRANSCRIPTOMIC  cDNA    DRS235149       SAMD00218965    2       1       1
+DRS235149       DRR221904       RNA-Seq TRANSCRIPTOMIC  cDNA    DRS235149       SAMD00218965    2       1       1
+DRS235150       DRR221889       OTHER   TRANSCRIPTOMIC  cDNA    DRS235150       SAMD00218966    2       1       1
+DRS235150       DRR221905       RNA-Seq TRANSCRIPTOMIC  cDNA    DRS235150       SAMD00218966    2       1       1
+DRS235152       DRR221891       OTHER   TRANSCRIPTOMIC  cDNA    DRS235152       SAMD00218968    2       1       1
+DRS235152       DRR221907       RNA-Seq TRANSCRIPTOMIC  cDNA    DRS235152       SAMD00218968    2       1       1
+```
+
+Finally we collected SRR accessions (i) with `library strategy` of `RNA-Seq`, and (ii) `library selection` be `cDNA`, `RANDOM`, `PolyA`, or `Oligo-dT`.
+
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat SRS_SRR.allpass.SRR.info | perl -ne 'if($.==1){ open(FILE,"<SRS_SRR.allpass"); while($line=<FILE>){ chomp $line; @s=split(/\s+/,$line); $hash{$s[1]}=$s[0]; } close FILE } chomp; @t=split(/,/,$_,-1); unshift @t,$hash{$t[0]}; print join("\t",@t)."\n";' | perl -ne 'chomp; @t=split; $lineHash{$t[1]}=$_; $srrHash{$t[1]}=$t[0]; $hash2{$t[0]}{$t[2]}=1; $hash3{$t[0]}{$t[3]}=1; $hash4{$t[0]}{$t[4]}=1; if(eof){ for $k (sort keys %lineHash){ $cnt2=keys %{$hash2{$srrHash{$k}}}; $cnt3=keys %{$hash3{$srrHash{$k}}}; $cnt4=keys %{$hash4{$srrHash{$k}}}; print "$lineHash{$k}\n" if $cnt2==1 && $cnt3==1 && $cnt4==1; } }' | perl -ne 'chomp; @t=split; print "$t[1]\t$t[0]\n" if ($t[2] eq "RNA-Seq") && (($t[4] eq "cDNA") || ($t[4] eq "Oligo-dT") || ($t[4] eq "RANDOM") || ($t[4] eq "PolyA"))' > SRS_SRR.selected
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ wc -l SRS_SRR.selected
+40363 SRS_SRR.selected
+```
+
+Download [the count file](https://dee2.io/mx/) and use the `SRS_aggr.R` (in our `scripts` directory, requires the `rhdf5` library) to aggregate read counts into biological replicates, i.e., SRS accessions.
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head SRS_SRR.selected
 DRR008476       DRS007600
 DRR008477       DRS007601
 DRR008478       DRS007602
@@ -24,36 +101,35 @@ DRR016116       DRS014212
 DRR021335       DRS030798
 DRR021336       DRS030797
 
-wdlin@comp04:SOMEWHERE/ath$ bzip2 -dc athaliana_se.tsv.bz2 | perl -ne 'if($.==1){ open(FILE,"<ath_SRR_20240529.txt"); while($line=<FILE>){ chomp $line; $line=~s/^\s+|\s+$//g; @s=split(/\s+/,$line); $srs{$s[0]}=$s[1] } close FILE } chomp; @t=split; if(exists $srs{$t[0]}){ $samples{$srs{$t[0]}}=1; $hash{$t[1]}{$srs{$t[0]}}+=$t[2] } if(eof STDIN){ print "Symbol"; for $s (sort keys %samples){ print "\t$s" } print "\n"; for $g (sort keys %hash){ print "$g"; for $s (sort keys %samples){ if(exists $hash{$g}{$s}){ print "\t$hash{$g}{$s}" }else{ print "\t0" } } print "\n" } }' > ath_sel20240529.nMatrix.txt
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/SRS_aggr.R athaliana_se.h5 SRS_SRR.selected sel20261001.nMatrix.txt
 ```
-
 Points to be noticed:
-1. `athaliana_se.tsv.bz2` is the count file downloaded from the DEE2 database
-2. `ath_SRR_20240529.txt` is the SRR-SRS mapping (a two-column tab-delimited text file) with collected SRS accessions in above step 3.
-3. The output file `ath_sel20240529.nMatrix.txt` (tab-delimited) is the raw count matrix, with columns for samples and rows for genes.
+1. `athaliana_se.h5` is the count file downloaded from the DEE2 database. It is in the HDF5 format.
+2. `SRS_SRR.selected` is the SRR-SRS mapping (a two-column tab-delimited text file) with SRS accessions collected in the above step.
+3. The output file `sel20261001.nMatrix.txt` (tab-delimited) is the raw count matrix, with columns for samples and rows for genes.
 
 ### Duplicate removal
 
 Some samples (SRS) would be repeatedly submitted to the NCBI SRA database. The following steps were applied for removing duplications.
 
 ```
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/duplicateDetect.pl ath_sel20240529.nMatrix.txt > ath_sel20240529.nMatrix.dupReport
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/duplicateDetect.pl sel20261001.nMatrix.txt > sel20261001.nMatrix.dupReport
 
-wdlin@comp04:SOMEWHERE/ath$ head ath_sel20240529.nMatrix.dupReport
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head sel20261001.nMatrix.dupReport
 Reading matrix
 Compute hash
 Compare
 Report
-DUP: ERS1647356 ERS1827231
-DUP: ERS1647357 ERS1827232
-DUP: ERS1647358 ERS1827235
-DUP: ERS1647359 ERS1827236
-DUP: SRS1042458 SRS2817876
-DUP: SRS1121919 SRS2218890
+DUP: DRS518865  SRS26357459
+DUP: DRS518866  SRS26357460
+DUP: DRS518867  SRS26357461
+DUP: ERS14405101        SRS9822351
+DUP: ERS14405102        SRS9822352
+DUP: ERS14405103        SRS9822347
 
-wdlin@comp04:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt | perl -ne 'chomp; s/^\s+|\s+$//g; @t=split; print "$_\n" for @t' | perl -ne 'chomp; if($.==1){ open(FILE,"<ath_sel20240529.nMatrix.dupReport"); while($line=<FILE>){ chomp $line; if($line=~/^DUP/){ @s=split(/\s+/,$line); shift @s; shift @s; for $x (@s){ $duplicate{$x}=1 } }} close FILE; print "$_\tnondup\n" }else{ print "$_\t"; if(exists $duplicate{$_}){ print "0\n" }else{ print "1\n" } }' > ath_sel20240529.dup.txt
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head -1 sel20261001.nMatrix.txt | perl -ne 'chomp; s/^\s+|\s+$//g; @t=split; print "$_\n" for @t' | perl -ne 'chomp; if($.==1){ open(FILE,"<sel20261001.nMatrix.dupReport"); while($line=<FILE>){ chomp $line; if($line=~/^DUP/){ @s=split(/\s+/,$line); shift @s; shift @s; for $x (@s){ $duplicate{$x}=1 } }} close FILE; print "$_\tnondup\n" }else{ print "$_\t"; if(exists $duplicate{$_}){ print "0\n" }else{ print "1\n" } }' > sel20261001.dup.txt
 
-wdlin@comp04:SOMEWHERE/ath$ head ath_sel20240529.dup.txt
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head sel20261001.dup.txt
 Symbol  nondup
 DRS007600       1
 DRS007601       1
@@ -65,40 +141,35 @@ DRS030798       1
 DRS047331       1
 DRS047332       1
 ```
-
-The first command was to use the script `duplicateDetect.pl` (in our `scripts` directory) for identifying duplicate columns (samples). Inside the output file (`ath_sel20240529.nMatrix.dupReport` here), lines started with `DUP:` are for duplicated samples. The perl oneliner was to read the header column from the raw count matrix (`head -1 ath_sel20240529.nMatrix.txt`) and generate a 0-1 matrix (`ath_sel20240529.dup.txt`) based on the duplication report. The 0-1 matrix was for indicating which samples are nonduplicated. For samples reported in the ducplication report, only the first sample from each line was specified as nonduplicated.
+The first command was to use the script `duplicateDetect.pl` (in our `scripts` directory) to identify duplicate columns (samples). Inside the output file (`sel20261001.nMatrix.dupReport` here), lines started with `DUP:` are for duplicated samples. The perl oneliner was to read the header column from the raw count matrix (`head -1 sel20261001.nMatrix.txt`) and generate a 0-1 matrix (`sel20261001.dup.txt`) based on the duplication report. The 0-1 matrix was for indicating which samples are nonduplicated. For samples reported in the ducplication report, only the first sample from each line was specified as nonduplicated.
 
 The last command for duplication removal was to apply `matrixSelection.pl` (in our `scripts` directory). This script takes at least four parameters:
-1. selection matrix: in this case, `ath_sel20240529.dup.txt` is the selection matrix. Note that column headers are treated as selection targets.
+1. selection matrix: in this case, `sel20261001.dup.txt` is the selection matrix. Note that column headers are treated as selection targets.
 2. source matrix: a tab-delimited matrix file, with columns for samples.
 3. output prefix: an output filename would be in the form `<output prefix>.<target>`.
 4. targets: one or more column headers from the selection matrix could be selected for column selection from the source matrix.
 ```
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/matrixSelection.pl
 matrixSelection.pl <selMatrix> <sourceMatrix> <outPrefix> [<selTarget>]+
 
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.dup.txt ath_sel20240529.nMatrix.txt ath_sel20240529.nMatrix.txt nondup
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/matrixSelection.pl sel20261001.dup.txt sel20261001.nMatrix.txt sel20261001.nMatrix.txt nondup
 ```
 
-In this example, the read count matrix without duplicated samples would be named `ath_sel20240529.nMatrix.txt.nondup`.
+In this example, the read count matrix without duplicated samples would be named `sel20261001.nMatrix.txt.nondup`.
 
 ### In case no sample classification required
 
-We believe that certain normalization is needed for the co-expression database but not the raw counts. In case that no sample classification requried. The following R commands were adopted for the normalization task using the TMM method (PMID: 20196867).
-```
-library("edgeR")
-x <- read.delim("ath_sel20240529.nMatrix.txt.nondup",row.names="Symbol")
-dge <- DGEList(counts=x)
-dge <- calcNormFactors(dge)
-v <- voom(dge,normalize="none")
-write.csv(x=v$E,file="sel20240529.nMatrix.TMM")
-quit()
-```
-
-You may modify the `write.csv` command or use the following perl oneliner to transfer the output CSV file into a tab-delimited text file. Our java program for co-expression computation accepts only tab-delimited matrix files.
+We believe that certain normalization is needed for the co-expression database but not the raw counts. In case that no sample classification requried. The R script `TMM.R` (in our `scripts` directory, requires the `edgeR` library) was adopted for the normalization task using the TMM method (PMID: 20196867).
 
 ```
-wdlin@comp04:SOMEWHERE/ath$ cat sel20240529.nMatrix.TMM | perl -ne 'chomp; @t=split(/,/); $nonFirst=0; for $x (@t){ $x=~s/^"|"$//g; print "\t" if $nonFirst; $nonFirst=1; print "$x" } print "\n"' > sel20240529.nMatrix.TMM.txt
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/TMM.R sel20261001.nMatrix.txt.nondup Symbol sel20261001.nMatrix.TMM
+```
+
+Its output is a tab-delimited matrix file.
+
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.nMatrix.TMM | perl -ne 'chomp; @t=split(/\t/); $cnt=@t; $hash{$cnt}++; if(eof){ for $x (sort keys %hash){ print "$x\t$hash{$x}\n" } }'
+37809   32834
 ```
 
 ### Sample classification part 1, downloading metadata from NCBI
