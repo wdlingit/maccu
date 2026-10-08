@@ -29,7 +29,7 @@ SRS: 90960      44495   46465
 
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat athaliana_metadata.tsv | perl -ne 'next if $.==1; chomp; @t=split; $srsHash{$t[3]}{$t[0]}=1; if($t[1]=~/pass/i){ $srrPassHash{$t[0]}=1 }else{ $srrPassHash{$t[0]}=0 } if(eof){ for $k1 (sort keys %srsHash){ $flag=1; for $k2 (keys %{$srsHash{$k1}}){ $flag=0 if $srrPassHash{$k2}==0; } if($flag){ for $k2 (sort keys %{$srsHash{$k1}}){ print "$k1\t$k2\n" } } } }' > SRS_SRR.allpass
 ```
-In above, the first perl one-liner showed total, pass, and non-pass numbers of SRR's, as well as, total, all-pass, non-all-pass numbers of SRS's. Here we have 44495 SRS's with all-pass SRR's. The second perl one-liner saved SRS-SRR pairs of all-pass SRS's.
+In above, the first perl oneliner showed total, pass, and non-pass numbers of SRR's, as well as, total, all-pass, non-all-pass numbers of SRS's. Here we have 44495 SRS's with all-pass SRR's. The second perl oneliner saved SRS-SRR pairs of all-pass SRS's.
 
 To collect SRS's that are belonging to RNAseq samples, we need metadata info in addition to those provided in `athaliana_metadata.tsv`. Script `runinfoRetrieve.pl` (in our `scripts` directory) was used for retriving metadata of SRR's from NCBI.
 
@@ -45,7 +45,7 @@ Points to be noticed:
 5. Variable `$maxTry` was hard-coded as `3` for the number of re-try an `efetch` command.
 6. Variable `$chunkSize` was hard-coded as `100` so that every 100 SRR accessions would be queried by one single command. This would largely improve the query efficiency. In our experiences, 6000 SRRs would took only a few minutes.
 
-Assuming that `SRS_SRR.allpass.SRR` is for the SRR list and `SRS_SRR.allpass.SRR.out` is the output CSV file of `runinfoRetrieve.pl`. The next perl one-liner extracts `LibraryStrategy`, `LibrarySource`, `LibrarySelection`, `Sample`, and `BioSample` from the CSV output. Note that it requires the `Text::CSV` perl module.
+Assuming that `SRS_SRR.allpass.SRR` is for the SRR list and `SRS_SRR.allpass.SRR.out` is the output CSV file of `runinfoRetrieve.pl`. The next perl oneliner extracts `LibraryStrategy`, `LibrarySource`, `LibrarySelection`, `Sample`, and `BioSample` from the CSV output. Note that it requires the `Text::CSV` perl module.
 
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat SRS_SRR.allpass.SRR.out | perl -MText::CSV -ne 'if($.==1){ open(FILE,"<SRS_SRR.allpass.SRR"); while($line=<FILE>){ chomp $line; $hash{$line}=1; } close FILE; @attrArr=("LibraryStrategy","LibrarySource","LibrarySelection","Sample","BioSample"); $csv=Text::CSV->new({ binary => 1, auto_diag => 1 }); } chomp; if($csv->parse($_)){ @t=$csv->fields }else{ die "ERROR: $_\n" } if($t[0] eq "Run"){ %idxHash=(); for($i=0;$i<@t;$i++){ $idxHash{$t[$i]}=$i } }elsif(exists $hash{$t[0]}){ print "$t[0]"; for $k (@attrArr){ if(exists $idxHash{$k}){ print ",$t[$idxHash{$k}]" }else{ print "," } } print "\n" }' | sort | uniq > SRS_SRR.allpass.SRR.info
@@ -174,228 +174,323 @@ wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.nMatrix.TMM | perl
 
 ### Sample classification part 1, downloading metadata from NCBI
 
-We firstly generate a list of SRS accessions of nonduplicated samples.
+We firstly generate a list of SRS accessions of nonduplicated samples. You may take `sel20261001.nMatrix.txt.nondup` as the input if you didn't do the TMM step.
 ```
-wdlin@comp04:SOMEWHERE/ath$ head -1 ath_sel20240529.nMatrix.txt.nondup | perl -ne 'chomp; @t=split; shift @t; for $x (@t){ print "$x\n" }' > ath_sel20240529.list
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head -1 sel20261001.nMatrix.TMM | perl -ne 'chomp; @t=split; for $x (@t){ print "$x\n" if length($x)>0 }' > sel20261001.SRRs
 ```
 
-The `biosampleRetrieveBySRS.pl` (in our `scripts` directory) was used for retriving metadata from NCBI.
+Then generate a hint file of SRS to BioSample mapping by extracting them from `SRS_SRR.allpass.SRR.info`.
 ```
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleRetrieveBySRS.pl
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat SRS_SRR.allpass.SRR.info | perl -ne 'chomp; @t=split(/,/,$_,-1); $cnt=@t; $hash{$t[4]}=$t[5]; if(eof){ for $k (sort keys %hash){ print "$k\t$hash{$k}\n" } }' > SRS_bios.hints
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head SRS_bios.hints
+DRS007600       SAMD00009103
+DRS007601       SAMD00009101
+DRS007602       SAMD00009102
+DRS014211       SAMD00013248
+DRS014212       SAMD00013247
+DRS016105       SAMD00015876
+DRS030797       SAMD00018418
+DRS030798       SAMD00018417
+DRS047331       SAMD00060395
+DRS047332       SAMD00060396
+```
+
+The `biosampleRetrieveBySRS.pl` (in our `scripts` directory) was used for retriving metadata of BioSamples from NCBI. The reason of using BioSample metadata is because it is richer than that of SRA records so we better obtain BioSample accessions for SRS records. The script contains two edirect queries for each SRS, the first one is for obtaining corresponding BioSample accessions, and the second one is for getting BioSample metadata. With the help of the hint file, we can save the efforts of getting BioSample accessions.
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleRetrieveBySRS.pl
 biosampleRetrieve.pl <listFile> <outSrsBios> <outXML>
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleRetrieveBySRS.pl -hint SRS_bios.hints sel20261001.SRRs sel20261001.SRRs.bios sel20261001.xml
 ```
 Points to be noticed:
 1. The [NCBI EDirect utility](https://www.ncbi.nlm.nih.gov/books/NBK179288/) is required for running this script
-2. This script will write retrieved metadata XML into `<outXML>` and SRS-BioSample accession pairs into `<outSrsBios>`. You may use the line numbers in `<outSrsBios>` to check numbers of SRS records with successfully retrieved metadata.
+2. This script will write retrieved metadata XML into `<outXML>` and processed SRS-BioSample accession pairs into `<outSrsBios>`. You may use the line numbers in `<outSrsBios>` to check numbers of SRS records with successfully retrieved metadata.
 3. This script will *append* contents to the two output files, and it will process only SRS accessions not in `<outSrsBios>`. That is, you may simply repeat the same command a few number of times for retrieving metadata for the same list without taking care of the outputs. NOTE: It is possible that the NCBI contains no metadata for some SRS accessions. Just mark those SRS accessions kept being searched for a number of times and check them in the NCBI webpage.
-4. This script doesn't support parallel processing. You may apply a command like `split -l 2500 -d ath_sel20240529.list ath_sel20240529.list.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
-5. Variable `$maxTry` was hard-coded as `3` for the number of re-try an `esearch` command. Modify it if needed.
+4. This script doesn't support parallel processing. You may apply a command like `split -l 4726 -d sel20261001.SRRs sel20261001.SRRs.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
+5. Option `-hint` is for providing the hint of BioSample accessions for SRS accessions.
+6. Option `-maxtry` (default `3`) is for the number of re-try an `esearch` command. Modify it if needed.
 6. Inside the script, the first two `esearch` commands were used for retrieving the corresponding BioSample accession of an SRS accession. They are our current best practices for retrieving BioSample accessions from SRS accessions. Modify them if needed.
-7. The last `esearch` command in the script was to extract metadata of the BioSample accession corresponding to an SRS accession. The reason that we extract metadata form BioSample but not SRA is that the metadata from BioSample is generally more detailed than that from SRA.
-
-Again, it is possible that we might retrieve no metadata for some SRS. So we may apply a similar technique to remove them from the count matrix. (`ath_sel20240529.map` is the (merged) `<outSrsBios>` output file)
-```
-wdlin@comp04:SOMEWHERE/ath$ cat ath_sel20240529.map | perl -ne 'if($.==1){ print "SRS\tgot\n" } chomp; @t=split; print "$t[0]\t1\n"' > ath_sel20240529.gotMetadata
-
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_sel20240529.gotMetadata ath_sel20240529.nMatrix.txt.nondup ath_sel20240529.nMatrix got
-```
+7. The last `esearch` command in the script was to extract metadata of the BioSample accession corresponding to an SRS accession.
 
 ### Sample classification part 2, an example of arabidopsis ecotypes
 
-Due to the complexity of human-input metadata, we don't have a completely automatic classification method. Here we present an approximation that used to give us enough number of samples after classification. In this session, we present what we had done on arabidopsis ecotypes.
+Due to the complexity of human-input metadata, we *currently* don't have a completely automatic classification method. Here we present an approximation that used to give enough number of samples after classification. In this session, we present what we had done on arabidopsis ecotypes.
 
-Suppose that `ath_SRS_20240529.txt` is the metadata XML file that we obtained using the script described in the last session. The following two commands helped us for understanding the diversity inside the metadata.
+Suppose that `sel20261001.xml` is the metadata XML file that we obtained using the script described in the last session. The following two commands helped us for understanding the diversity inside the metadata.
 ```
-wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.txt | perl -ne 'chomp; if(/<Attribute attribute_name="(.+?)"/){ $hash{"$1"}++ } if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > ath_SRS_20240529.attributes
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.xml | perl -ne 'chomp; if(/<Attribute attribute_name="(.+?)"/){ $hash{"$1"}++ } if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > sel20261001.attributes
 
-wdlin@comp04:SOMEWHERE/ath$ head ath_SRS_20240529.attributes
-tissue  14761
-source_name     13210
-genotype        11304
-ecotype 10567
-age     8852
-treatment       7384
-geo_loc_name    5283
-INSDC status    3126
-INSDC first public      3126
-INSDC center name       3126
-
-wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.attributes | perl -ne 'chomp; @t=split(/\t/); $cmd="cat ath_SRS_20240529.txt | grep \"\\\"$t[0]\\\"\" | uniq | head -30"; print "ATTR: $_\n"; system $cmd' | less
-ATTR: tissue    14761
-      <Attribute attribute_name="organism part" harmonized_name="tissue" display_name="tissue">flower bud (EFO_0001924)</Attribute>
-      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">seedlings</Attribute>
-      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">root</Attribute>
-      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">seedling</Attribute>
-      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">shoot apex</Attribute>
-      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">Inflorescence meristems and young floral buds</Attribute>
-      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">whole tisues</Attribute>
-      <Attribute attribute_name="tissue" harmonized_name="tissue" display_name="tissue">1cm long root tips</Attribute>
-      <Attribute attribute_name="tissue_type" harmonized_name="tissue" display_name="tissue">cultured cell line MM2d</Attribute>
-(deleted)
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head sel20261001.attributes
+tissue  29769
+source_name     21917
+genotype        21474
+ecotype 19706
+geo_loc_name    18336
+age     16510
+treatment       15898
+collection_date 12488
+dev_stage       7251
+isolate 5030
 ```
-In the metadata XML file, each BioSample is associated with a number of *attributes* which may have different values. For example, samples may have `tissue` attributes of values `root`, `seedling`, .... The first perl oneliner was to collect all attributes and rank them from the most frequently recorded attribute to the least frequently recorded attribute. In file `ath_SRS_20240529.attributes`, we may find that the `tissue` attribute was ranked first, which *should be* corresponding to tissue information. It was also found that the `ecotype` attribute was ranked fourth and that *should be* corresponding to ecotype information. The last perl oneliner command was to list first few nonredundant records for each attribute using simple linux commands (so might be inaccurate). This helped us for quick browsing possible values of each attributes.
+In the metadata XML file, each BioSample is associated with a number of *attributes* which may have different values. For example, samples may have `tissue` attributes of values `root`, `seedling`, .... The first perl oneliner was to collect all attributes and rank them from the most frequently recorded attribute to the least frequently recorded attribute. In file `sel20261001.attributes`, we found that `tissue` was ranked first, which *should be* corresponding to tissue information. It was also found that the `ecotype` attribute was ranked fourth and that *should be* corresponding to ecotype information.
 
 Since the above initial observation suggested us that `ecotype` could be an attribute relate with ecotype information, we applied the following perl oneliner to extract (lower-cased) values of attribute `ecotype`.
 ```
-wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.txt | perl -ne 'chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ print "$2\n" if $1 eq "ecotype" }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/ecotype0.xls
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.xml | perl -ne 'chomp; if(/<Attribute attribute_name="(.+?)".+?display_name="(.+?)".*?>(.+?)</){ print "$3\n" if $1 eq "ecotype" }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ print "value\tcount\n"; for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/ecotype0.in
 
-wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype0.xls
-col-0   5538
-columbia        1906
-col-0 (efo_0005148)     692
-col0    250
-landsberg erecta        223
-col-0 (cs70000) 106
-bay x sha ril   83
-columbia (col-0)        81
-columbia (efo_0005147)  75
-wassilewskija   69
-```
-We intended to save the tab-delimited text file with extension `.xls` because it is convenient to do the next *manual* curation step by using Excel. By importing `ecotype0.xls` into Excel, we added one more column named `col0` for identifying those `ecotype` values that should be refering to arabidopsis col-0 ecotype. Here, Excel formulas like FIND can be used for some quick and inaccurate identification. No matter how, a manual confirmation is needed. In the following example, it was shown that ecotype col-0 could be recorded under attribute `ecotype` with values like `col-0`, `columbia`, `col-0 (efo_0005148)`, `col-0 (cs70000)`, ... and many others. Note that the *last* column `col0` contains values of `TRUE` and `FALSE`.
-
-![Excel editing of ecotype0.xls](https://github.com/wdlingit/maccu/blob/main/pic/ecotype0_excel.png)
-
-After the first round of manual curation, we saved the curation table for of col-0 *values* into a tab-delimited text file `ecotype0.txt` (quotes removed, if any). The following perl oneliner was applied to compute (i) attribute counts associated with curated col-0 *values* (in `ecotype0.txt`) and (ii) attribute counts in the metadata file. In so doing, we may discover attributes other than `ecotype` that also store ecotype information (recall that the metadata were human-inputted).
-```
-wdlin@comp04:SOMEWHERE/ath$ cat ath_SRS_20240529.txt | perl -ne 'if($.==1){ open(FILE,"<extraction/ecotype0.txt"); $line=<FILE>; while($line=<FILE>){ chomp $line; $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=0 if $s[-1] eq "TRUE"; } close FILE } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ $attr=$1; $val=lc($2); $cnt{$attr}++; $match{$attr}++ if exists $hash{$val} } if(eof STDIN){ print "attr\tmatch\ttotal\n"; for $attr (sort keys %match){ $x=0; $x=$match{$attr} if exists $match{$attr}; print "$attr\t$x\t$cnt{$attr}\n" } }' > extraction/ecotype1.xls
-
-wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype1.xls
-attr    match   total
-Genotype        9       12
-Matrial 22      26
-Submitter Id    1       3115
-accession       120     292
-agent   29      135
-background cultivar     9       9
-background ecotype      114     215
-background strain       18      18
-cell line       2       63
-```
-Again, the output table was saved with extension `.xls` for importing to Excel for manual curation. In Excel, we added one `ratio` column that computes the ratio that an attribute associated with curated col-0 values. We also added a `selection` column that simply check if the ratio is greater than 0.1 or not. Note that the simple check on ratios would be convenient but not accurate. So, again, manual curation is needed. In the following picture, you may find that we execlude `Genotype` even if more than 0.1 of it appearances were associated with col-0 like values. It is also surprising (and actually not surprising) that attribute `accession` was found to contain ecotype information. The curated table of ecotype *attributes* was saved into a tab-delimited text file `ecotype1.txt`.
-
-![Excel editing of ecotype0.xls](https://github.com/wdlingit/maccu/blob/main/pic/ecotype1_excel.png)
-
-**FOR A SHORT SUMMARY**, now we have `ecotype1.txt` contains attributes we considered containing ecotype infromation in the metadata file. Note that the last column in `ecotype1.txt` is containing values of `TRUE` and `FALSE`. Also, in `ecotype0.txt`, we have values that we considered indicating col-0 ecotype, where `TRUE` and `FALSE` are under the col0 column.
-```
-wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype1.txt
-attr    match   total   ratio   selection
-Genotype        9       12      0.7500  FALSE
-Matrial 22      26      0.8462  FALSE
-Submitter Id    1       3115    0.0003  FALSE
-accession       120     292     0.4110  TRUE
-agent   29      135     0.2148  FALSE
-background cultivar     9       9       1.0000  TRUE
-background ecotype      114     215     0.5302  TRUE
-background strain       18      18      1.0000  TRUE
-cell line       2       63      0.0317  FALSE
-
-wdlin@comp04:SOMEWHERE/ath$ head extraction/ecotype0.txt
-value   count   col0
-col-0   5538    TRUE
-columbia        1906    TRUE
-col-0 (efo_0005148)     692     TRUE
-col0    250     TRUE
-landsberg erecta        223     FALSE
-col-0 (cs70000) 106     TRUE
-bay x sha ril   83      FALSE
-columbia (col-0)        81      TRUE
-columbia (efo_0005147)  75      FALSE
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/ecotype0.in
+value   count
+col-0   10792
+columbia        3924
+col0    752
+col-0 (efo_0005148)     606
+landsberg erecta        364
+missing 254
+columbia (col-0)        152
+not collected   104
+col-0 (cs70000) 90
 ```
 
-So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 value for every sample. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS014211 and DRS014212 are the first two SRS accessions considered not related with col-0. Note that our approach might not be fully accruate, but classified samples would be based on specified attributes and specified values in the metadata file.
+The next perl oneliner command was for simple (and dirty) ecotype classification for col-0 and ler. It reads `ecotype0.in` and appends 0-1 columns for each classified ecotypes. Some rules were found incorrect and fixed. (ex: `efo_0005154`)
 ```
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleClassify.pl
+cat extraction/ecotype0.in |
+perl -ne '
+    chomp;
+    if($.==1){ print "$_\tcol0\tler\tOR\n"; next; }
+    ($value,$count)=split(/\t/);
+    if($value=~/col-0/ ||
+       $value=~/col_0/ ||
+       $value=~/col0/ ||
+       $value=~/col - 0/ ||
+       $value=~/columbia background/ ||
+       $value=~/^columbia$/ ||
+       $value=~/^coloumbia$/ ||
+       $value=~/^colombia 0$/ ||
+       $value=~/^colombia-0$/ || 
+       $value=~/^columbia - 0$/ || 
+       $value=~/columia-0/ || 
+       $value=~/^columbia0$/ || 
+       $value=~/^columbia_0$/ || 
+       $value=~/efo_0005147/ || 
+       $value=~/col 0 \(cs70000\)/ || 
+       $value=~/a.thalianaecotype columbia/ || 
+       $value=~/columbia-0 ecotype/ || 
+       $value=~/columbia-0 background/ || 
+       $value=~/wild-type columbia-0/ || 
+       $value=~/columbia-0 \(/ || 
+       $value=~/columbia \(/){
+        $col0=1 
+    }else{ 
+        $col0=0 
+    } 
+    if($value=~/landsberg erecta/ || 
+       $value=~/lansberg erecta/ || 
+       $value=~/landsberg ecotype/ || 
+       $value=~/efo_0005154/ || 
+       $value=~/ler-0/){ 
+        $ler=1 
+    }else{ 
+        $ler=0 
+    } 
+    if($col0 || $ler){ 
+        $or=1 
+    }else{ 
+        $or=0 
+    } 
+    print "$_\t$col0\t$ler\t$or\n";
+' > extraction/ecotype0.out
+```
+
+This needs some iterative fix of the rules. The next two perl oneliners can provide some help.
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat extraction/ecotype0.out | perl -ne 'chomp; @t=split(/\t/); print "$_\n" if $t[-1]==0' | head
+value   count   col0    ler     OR
+missing 254     0       0       0
+not collected   104     0       0       0
+bay x sha ril   83      0       0       0
+not applicable  82      0       0       0
+wassilewskija   81      0       0       0
+tre-1   48      0       0       0
+mutant  47      0       0       0
+tol-0   47      0       0       0
+abd-0   47      0       0       0
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat extraction/ecotype0.out | perl -ne 'chomp; if($.==1){ @header=split(/\t/); next } @t=split(/\t/); $hash{"count"}+=$t[1]; for($i=2;$i<@t;$i++){ $hash{$header[$i]}+=$t[1] if $t[$i] } if(eof){ shift @header; for $x (@header){ print "$x\t$hash{$x}\n" } }'
+count   19706
+col0    16983
+ler     428
+OR      17411
+```
+The first one lists `values` that were not taken into consideration. The second one summarizes numbers of classifications.
+
+As the curation table of col-0 and ler was saved in `ecotype0.out`, the following perl oneliner was applied to compute (i) attribute counts associated with curated col-0 or ler *values* (in `ecotype0.out`) and (ii) attribute counts in the metadata file. In so doing, we may discover attributes other than `ecotype` that also store ecotype information (recall that the metadata were human-inputted).
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.xml | perl -ne 'if($.==1){ open(FILE,"<extraction/ecotype0.out"); $line=<FILE>; while($line=<FILE>){ chomp $line; $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=0 if $s[-1]==1; } close FILE } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ $attr=$1; $val=lc($2); $cnt{$attr}++; $match{$attr}++ if exists $hash{$val} } if(eof STDIN){ print "attr\tmatch\ttotal\tratio\n"; for $attr (sort {$match{$b}<=>$match{$a}} keys %match){ $x=0; $x=$match{$attr} if exists $match{$attr}; print "$attr\t$x\t$cnt{$attr}\t".sprintf("%.2f",($x/$cnt{$attr}))."\n" } }' > extraction/ecotype1.in
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/ecotype1.in
+attr    match   total   ratio
+ecotype 17411   19706   0.88
+genotype        2218    21474   0.10
+ecotype background      406     513     0.79
+accession       256     452     0.57
+ecotype/background      225     232     0.97
+cultivar        205     3685    0.06
+background ecotype      166     279     0.59
+plant line      114     172     0.66
+genetic background      90      377     0.24
+```
+
+Again, we use the following perl oneliner for writing rules of curation.
+```
+cat extraction/ecotype1.in | 
+perl -ne '
+    chomp; 
+    @t=split(/\t/); 
+    if($.==1){ 
+        print "$_\tselection\n"; 
+        next 
+    } 
+    $sel=0; 
+    $sel=1 if $t[-1]>0.5; 
+    if(($t[0] eq "cell line") || 
+       ($t[0] eq "cell type") || 
+       ($t[0] eq "cell_line") || 
+       ($t[0] eq "cultivar") || 
+       ($t[0] eq "genetic background") || 
+       ($t[0] eq "genetic background ecotype") || 
+       ($t[0] eq "subspecific genetic lineage name") || 
+       ($t[0] eq "strain/background") || 
+       ($t[0] eq "strain/ecotype") || 
+       ($t[0] eq "strain/line")){ 
+        $sel=1 
+    } 
+    if(($t[0] eq "female parent strain")){ 
+        $sel=0 
+    }  
+    push @t,$sel; 
+    print join("\t",@t)."\n"
+' > extraction/ecotype1.out
+```
+
+**FOR A SHORT SUMMARY**, now we have `ecotype1.out` contains attributes we considered containing ecotype infromation in the metadata file. Note that the last column in `ecotype1.out` is containing values of 1's and 0's. Also, in `ecotype0.out`, we have values that we considered indicating col-0 or ler ecotype.
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/ecotype1.out
+attr    match   total   selection
+ecotype 17411   19706   0.88    1
+genotype        2218    21474   0.10    0
+ecotype background      406     513     0.79    1
+accession       256     452     0.57    1
+ecotype/background      225     232     0.97    1
+cultivar        205     3685    0.06    1
+background ecotype      166     279     0.59    1
+plant line      114     172     0.66    1
+genetic background      90      377     0.24    1
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/ecotype0.out
+value   count   col0    ler     OR
+col-0   10792   1       0       1
+columbia        3924    1       0       1
+col0    752     1       0       1
+col-0 (efo_0005148)     606     1       0       1
+landsberg erecta        364     0       1       1
+missing 254     0       0       0
+columbia (col-0)        152     1       0       1
+not collected   104     0       0       0
+col-0 (cs70000) 90      1       0       1
+```
+
+So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 or ler value for every sample. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS014211 and DRS014212 are the first two SRS accessions considered not related with col-0. Note that our approach might not be fully accurate, but classified samples would be based on specified attributes and specified values in the metadata file.
+```
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleClassify.pl
 biosampleClassify.pl <attrFile> <valueFile> <biosampleXML>
 
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleClassify.pl extraction/ecotype1.txt extraction/ecotype0.txt ath_SRS_20240529.txt > extraction/ath_SRS_20240529.ecotype
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleClassify.pl extraction/ecotype1.out extraction/ecotype0.out sel20261001.xml > test.out
 
-wdlin@comp04:SOMEWHERE/ath$ head extraction/ath_SRS_20240529.ecotype
-SRS     count   col0
-DRS007600       0       1
-ERS1174633      0       1
-DRS007601       0       1
-ERS1174634      0       1
-DRS007602       0       1
-ERS1174635      0       1
-DRS014211       0       0
-DRS014212       0       0
-DRS073469       0       1
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head test.out
+SRS     count   col0    ler     OR
+DRS007600       0       1       0       1
+ERS1174633      0       1       0       1
+DRS007601       0       1       0       1
+ERS1174634      0       1       0       1
+DRS007602       0       1       0       1
+ERS1174635      0       1       0       1
+DRS014211       0       0       0       0
+DRS014212       0       0       0       0
+DRS030797       0       1       0       1
 ```
 
-Again, we applied the `matrixSelection.pl` script to extract the potion of col-0 samples from a count matrix by taking the classification matrix as the selection matrix.
+Here, it is possible to apply the `matrixSelection.pl` script to extract the potion of col-0 or ler samples from a count matrix by taking the classification matrix as the selection matrix.
 ```
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl extraction/ath_SRS_20240529.ecotype ath_sel20240529.nMatrix.txt.nondup extraction/ath_sel20240529.nMatrix col0
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/matrixSelection.pl test.out sel20261001.nMatrix.txt.nondup testOut col0 ler
 ```
 
-In our practice, we would do normalization on the count matrix of all collected col-0 samples here (refer above TMM method part for the normalization steps).
+In our practice, we would do normalization on the count matrix of all collected col-0 and ler samples here (refer above TMM method part for the normalization step).
 
 ### Sample classification part 3, an example of arabidopsis tissues
 
-Suppose that we have an attribute file `tissue1.txt` (like `ecotype1.txt` in above) and a value file (like `ecotype0` in above). We can similarly generate a classification matrix for tissues.
+Suppose that we have an attribute file `tissue1.out` (like `ecotype1.out` in above) and a value file (like `ecotype0.out` in above). We can similarly generate a classification matrix for tissues.
 ```
-wdlin@comp04:SOMEWHERE/ath$ tail extraction/tissue1.txt
-strain  8       204     0.0392  FALSE
-tag     1       18      0.0556  FALSE
-time    5       1453    0.0034  FALSE
-tissue  12875   14761   0.8722  TRUE
-tissue type     69      95      0.7263  TRUE
-tissue/cell type        2       3       0.6667  TRUE
-tissue_type     133     146     0.9110  TRUE
-tissuie 3       3       1.0000  TRUE
-tissus  2       23      0.0870  TRUE
-treatment       16      7384    0.0022  FALSE
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/tissue1.out
+attr    match   total   ratio   selection
+tissue  28412   29769   0.95    1
+source_name     14104   21917   0.64    1
+organism part   2918    3016    0.97    1
+dev_stage       2672    7251    0.37    0
+sample_type     407     1914    0.21    0
+plant structure 323     504     0.64    1
+tissue_type     305     324     0.94    1
+dev stage       304     546     0.56    0
+organ   292     292     1.00    1
 
-wdlin@comp04:SOMEWHERE/ath$ head extraction/tissue0.txt
-value   count   leaf    rosette root    shoot   flower  seedling        seed    whole   CNT     OR
-leaf    1659    TRUE    FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   1       TRUE
-seedlings       1175    FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
-root    1132    FALSE   FALSE   TRUE    FALSE   FALSE   FALSE   FALSE   FALSE   1       TRUE
-leaves  1030    TRUE    FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   1       TRUE
-seedling        1018    FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
-shoot   600     FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   FALSE   FALSE   1       TRUE
-whole seedling  573     FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
-whole seedlings 429     FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    FALSE   FALSE   1       TRUE
-whole plant     399     FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   FALSE   TRUE    1       TRUE
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/tissue0.out
+value   count   leaf    rosette root    shoot   flower  inflorescence   pollen  anther  seedling        hypocotyl       cotyledon       seed    embryo  endosperm       whole       aerial  OR
+leaf    3190    1       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       1
+root    2939    0       0       1       0       0       0       0       0       0       0       0       0       0       0       0       0       1
+seedlings       2314    0       0       0       0       0       0       0       0       1       0       0       0       0       0       0       0       1
+seedling        2088    0       0       0       0       0       0       0       0       1       0       0       0       0       0       0       0       1
+leaves  1591    1       0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       1
+whole seedling  1391    0       0       0       0       0       0       0       0       1       0       0       0       0       0       0       0       1
+shoot   1283    0       0       0       1       0       0       0       0       0       0       0       0       0       0       0       0       1
+whole seedlings 977     0       0       0       0       0       0       0       0       1       0       0       0       0       0       0       0       1
+roots   741     0       0       1       0       0       0       0       0       0       0       0       0       0       0       0       0       1
 
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/biosampleClassify.pl extraction/tissue1.txt extraction/tissue0.txt ath_SRS_20240529.txt > extraction/ath_SRS_20240529.tissue
-
-wdlin@comp04:SOMEWHERE/ath$ head extraction/ath_SRS_20240529.tissue
-SRS     count   leaf    rosette root    shoot   flower  seedling        seed    whole   CNT     OR
-DRS007600       0       0       0       0       0       1       0       0       0       0       1
-ERS1174633      0       0       0       0       0       1       0       0       0       0       1
-DRS007601       0       0       0       0       0       1       0       0       0       0       1
-ERS1174634      0       0       0       0       0       1       0       0       0       0       1
-DRS007602       0       0       0       0       0       1       0       0       0       0       1
-ERS1174635      0       0       0       0       0       1       0       0       0       0       1
-DRS014211       0       0       0       0       0       0       0       0       0       0       0
-DRS014212       0       0       0       0       0       0       0       0       0       0       0
-DRS073469       0       0       0       0       0       0       0       0       0       0       0
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleClassify.pl extraction/tissue1.out extraction/tissue0.out sel20261001.xml > extraction/sel20261001.tissue
 ```
 
-Given that we have the normalized log-count-per-million matrix of only col-0 samples saved in tab-delimited text file `sel20240529.Col0.TMM`, the following command can be applied for generating portions of tissues extracted from the normalized count matrix.
+Given that we have the normalized log-count-per-million matrix of only col-0 samples saved in tab-delimited text file `sel20261001.nMatrix.col0.TMM`, the following command can be applied for generating portions of tissues extracted from the normalized count matrix.
 ```
-wdlin@comp04:SOMEWHERE/ath$ ../scripts/matrixSelection.pl ath_SRS_20240529.tissue coexDB_202406/ath/sel20240529.Col0.TMM coexDB_202406/ath/sel20240529.Col0.TMM leaf rosette root shoot flower seedling seed whole
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath/extraction$ ../../scripts/matrixSelection.pl sel20261001.tissue sel20261001.nMatrix.col0.TMM sel20261001.nMatrix.col0.TMM leaf rosette root shoot flower inflorescence pollen anther seedling hypocotyl cotyledon seed embryo endosperm whole aerial
 
-wdlin@comp04:SOMEWHERE/ath$ find coexDB_202406/ath/ | perl -ne 'chomp; next if -d "$_"; print "$_\n"' | perl -ne 'chomp; $msg=`head -1 $_`; chomp $msg; @t=split(/\t/,$msg); $cnt=@t; $cnt--; print "$_\t$cnt\n"'
-coexDB_202406/ath/sel20240529.TMM       19746
-coexDB_202406/ath/sel20240529.Col0.TMM  9060
-coexDB_202406/ath/sel20240529.Col0.TMM.flower   242
-coexDB_202406/ath/sel20240529.Col0.TMM.leaf     2072
-coexDB_202406/ath/sel20240529.Col0.TMM.root     1084
-coexDB_202406/ath/sel20240529.Col0.TMM.rosette  587
-coexDB_202406/ath/sel20240529.Col0.TMM.seed     323
-coexDB_202406/ath/sel20240529.Col0.TMM.seedling 2854
-coexDB_202406/ath/sel20240529.Col0.TMM.shoot    548
-coexDB_202406/ath/sel20240529.Col0.TMM.whole    527
+wdlin@comp04:/RAID2/R418/20261001_coexDB$ find coexDB20261001/ | perl -ne 'chomp; next if -d "$_"; print "$_\n"' | perl -ne 'chomp; $msg=`head -1 $_`; chomp $msg; @t=split(/\t/,$msg); $cnt=@t; $cnt--; print "$_\t$cnt\n"'
+coexDB20261001/ath/sel20261001.ath.col0.TMM.whole       1004
+coexDB20261001/ath/sel20261001.ath.col0.TMM.flower      991
+coexDB20261001/ath/sel20261001.ath.col0.TMM.embryo      66
+coexDB20261001/ath/sel20261001.ath.col0.TMM     18539
+coexDB20261001/ath/sel20261001.ath.ler.TMM      452
+coexDB20261001/ath/sel20261001.ath.col0.TMM.root        2908
+coexDB20261001/ath/sel20261001.ath.col0.TMM.leaf        4157
+coexDB20261001/ath/sel20261001.ath.col0.TMM.pollen      219
+coexDB20261001/ath/sel20261001.ath.col0.TMM.endosperm   25
+coexDB20261001/ath/sel20261001.ath.col0.TMM.cotyledon   202
+coexDB20261001/ath/sel20261001.ath.col0.TMM.seed        798
+coexDB20261001/ath/sel20261001.ath.col0.TMM.aerial      231
+coexDB20261001/ath/sel20261001.ath.col0.TMM.seedling    5685
+coexDB20261001/ath/sel20261001.ath.col0.TMM.anther      69
+coexDB20261001/ath/sel20261001.ath.col0.TMM.inflorescence       323
+coexDB20261001/ath/sel20261001.ath.col0.TMM.rosette     1146
+coexDB20261001/ath/sel20261001.ath.col0.TMM.shoot       1212
+coexDB20261001/ath/sel20261001.ath.TMM  37808
+coexDB20261001/ath/sel20261001.ath.col0.TMM.hypocotyl   274
 ```
 The last command is for numbers of data columns (samples) in the extracted matrixes.
 
 ### Sample classification part 4 (optional), iteratively refine attributes & values for selection
 
-In above example, we started from one attrabute, collect *values* of our interests, decide *attributes*, and the use lastly adopted attributes and values for sample classification. Actually the process is flexible. For example, we can use those decided *attributes* to search more *values* for our decision. For example, the following perl oneliner was to use decided *attributes* (in file `dev1.txt`) to collect more *values* for making decision. Just remember to give an attribute file and a value file for generating a selection matrix.
+In above example, we started from one attrabute, collect *values* of our interests, decide *attributes*, and the use lastly adopted attributes and values for sample classification. Actually the process is flexible. For example, we can use those decided *attributes* to search more *values* for our decision. For example, the following perl oneliner was to use decided *attributes* (in file `ecotype1.out`) to collect more *values* for making decision. Just remember to give an attribute file and a value file for generating a selection matrix.
 
 ```
-wdlin@comp01:SOMEWHERE/dm$ cat dm_sel20240531.txt | perl -ne 'if($.==1){ open(FILE,"<extraction/dev1.txt"); while($line=<FILE>){ $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=1 if $s[-1] eq "TRUE" } close FILE; } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ print "$2\n" if exists $hash{$1} }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/dev2.xls
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.xml | perl -ne 'if($.==1){ open(FILE,"<extraction/ecotype1.out"); while($line=<FILE>){ $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=1 if $s[-1]==1 } close FILE; } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ print "$2\n" if exists $hash{$1} }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ print "value\tcount\n"; for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/ecotype2.in
 ```
 
 ### Sample classification part 5 (optional), import customized logic into the selection
