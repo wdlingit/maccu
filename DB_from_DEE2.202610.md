@@ -63,7 +63,7 @@ DRR018424,RNA-Seq,TRANSCRIPTOMIC,unspecified,DRS016105,SAMD00015876
 DRR021335,RNA-Seq,TRANSCRIPTOMIC,RANDOM,DRS030798,SAMD00018417
 ```
 
-There are some SRS accessions been submitted with multiple *library strategies* and/or *library selections*. They were excluded for safty.
+There are some SRS accessions been submitted with multiple *library strategies* and/or *library selections*. They were excluded for safty. The last three columns are for numbers of different *strategies*, *sources*, and *selections*, respectively.
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat bck/SRS_SRR.allpass.SRR.info | perl -ne 'if($.==1){ open(FILE,"<SRS_SRR.allpass"); while($line=<FILE>){ chomp $line; @s=split(/\s+/,$line); $hash{$s[1]}=$s[0]; } close FILE } chomp; @t=split(/,/,$_,-1); unshift @t,$hash{$t[0]}; print join("\t",@t)."\n";' | perl -ne 'chomp; @t=split; $lineHash{$t[1]}=$_; $srrHash{$t[1]}=$t[0]; $hash2{$t[0]}{$t[2]}=1; $hash3{$t[0]}{$t[3]}=1; $hash4{$t[0]}{$t[4]}=1; if(eof){ for $k (sort keys %lineHash){ $cnt2=keys %{$hash2{$srrHash{$k}}}; $cnt3=keys %{$hash3{$srrHash{$k}}}; $cnt4=keys %{$hash4{$srrHash{$k}}}; print "$lineHash{$k}\t$cnt2\t$cnt3\t$cnt4\n"; } }' | perl -ne '@t=split; print if $t[-3]>1 || $t[-2]>1 || $t[-1]>1' | sort | head
 DRS235147       DRR221886       OTHER   TRANSCRIPTOMIC  cDNA    DRS235147       SAMD00218963    2       1       1
@@ -110,7 +110,7 @@ Points to be noticed:
 
 ### Duplicate removal
 
-Some samples (SRS) would be repeatedly submitted to the NCBI SRA database. The following steps were applied for removing duplications.
+Some samples (SRS) might be repeatedly submitted to the NCBI SRA database. The following steps were applied for removing duplications.
 
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/duplicateDetect.pl sel20261001.nMatrix.txt > sel20261001.nMatrix.dupReport
