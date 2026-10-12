@@ -176,7 +176,7 @@ wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.nMatrix.TMM | perl
 
 We firstly generate a list of SRS accessions of nonduplicated samples. You may take `sel20261001.nMatrix.txt.nondup` as the input if you didn't do the TMM step.
 ```
-wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head -1 sel20261001.nMatrix.TMM | perl -ne 'chomp; @t=split; for $x (@t){ print "$x\n" if length($x)>0 }' > sel20261001.SRRs
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head -1 sel20261001.nMatrix.TMM | perl -ne 'chomp; @t=split; for $x (@t){ print "$x\n" if length($x)>0 }' > sel20261001.SRSs
 ```
 
 Then generate a hint file of SRS to BioSample mapping by extracting them from `SRS_SRR.allpass.SRR.info`.
@@ -201,13 +201,13 @@ The `biosampleRetrieveBySRS.pl` (in our `scripts` directory) was used for retriv
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleRetrieveBySRS.pl
 biosampleRetrieve.pl <listFile> <outSrsBios> <outXML>
 
-wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleRetrieveBySRS.pl -hint SRS_bios.hints sel20261001.SRRs sel20261001.SRRs.bios sel20261001.xml
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleRetrieveBySRS.pl -hint SRS_bios.hints sel20261001.SRSs sel20261001.SRSs.bios sel20261001.xml
 ```
 Points to be noticed:
 1. The [NCBI EDirect utility](https://www.ncbi.nlm.nih.gov/books/NBK179288/) is required for running this script
 2. This script will write retrieved metadata XML into `<outXML>` and processed SRS-BioSample accession pairs into `<outSrsBios>`. You may use the line numbers in `<outSrsBios>` to check numbers of SRS records with successfully retrieved metadata.
 3. This script will *append* contents to the two output files, and it will process only SRS accessions not in `<outSrsBios>`. That is, you may simply repeat the same command a few number of times for retrieving metadata for the same list without taking care of the outputs. NOTE: It is possible that the NCBI contains no metadata for some SRS accessions. Just mark those SRS accessions kept being searched for a number of times and check them in the NCBI webpage.
-4. This script doesn't support parallel processing. You may apply a command like `split -l 4726 -d sel20261001.SRRs sel20261001.SRRs.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
+4. This script doesn't support parallel processing. You may apply a command like `split -l 4726 -d sel20261001.SRSs sel20261001.SRSs.` to split the list into smaller lists for parallel processing (surely separate output files for separate input lists). Note that NCBI has some query number restriction per second given an API key. Be sure not to exceed the limitation.
 5. Option `-hint` is for providing the hint of BioSample accessions for SRS accessions.
 6. Option `-maxtry` (default `3`) is for the number of re-try an `esearch` command. Modify it if needed.
 6. Inside the script, the first two `esearch` commands were used for retrieving the corresponding BioSample accession of an SRS accession. They are our current best practices for retrieving BioSample accessions from SRS accessions. Modify them if needed.
