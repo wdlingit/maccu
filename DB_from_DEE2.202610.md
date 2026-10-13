@@ -252,7 +252,7 @@ not collected   104
 col-0 (cs70000) 90
 ```
 
-The next perl oneliner command was for simple (and dirty) ecotype classification for col-0 and ler. It reads `ecotype0.in` and appends 0-1 columns for each classified ecotypes. Some rules were found incorrect and fixed. (ex: `efo_0005154`)
+The next perl oneliner command was for simple (and dirty) ecotype classification for col-0 and ler. It reads `ecotype0.in` and appends 0-1 columns for each classified ecotypes.
 ```
 cat extraction/ecotype0.in |
 perl -ne '
