@@ -41,7 +41,7 @@ landsberg erecta    364
 -   First row is the header.
 -   One column contains the text value to be classified.
 -   Initial implementation assumes the first column is the classification target.
--   The second column is a count of occurrences of the value in the first column.
+-   Rest columns are optional.
 
 Example:
 
@@ -80,6 +80,7 @@ Supported values:
 ```         
 regex
 logic
+expr
 ```
 
 #### rule
@@ -180,6 +181,22 @@ Equivalent to:
 
 ```         
 $state{$column} = evaluate_boolean_expression($rule);
+```
+
+### Expr Rules
+
+Expr rules perform user-defined perl expressions. In the loop of processing each row, an array named `@fields` would be used to store the input fields. Expr rules are trusted Perl expressions evaluated with eval(). They may access `@fields` only. The result of the expression should be either 0 or 1, which will be assigned to the specified column.
+
+Examples:
+
+```
+high_count	eval	$fields[1] > 1000
+
+missing	eval	$fields[0] eq "missing"
+
+common	eval	$fields[1] >= 100
+
+interesting	eval	($fields[1] > 100) && ($fields[2] > 5)
 ```
 
 ### Evaluation Order
