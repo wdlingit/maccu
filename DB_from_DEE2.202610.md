@@ -215,7 +215,7 @@ Points to be noticed:
 
 ### Sample classification part 2, an example of arabidopsis ecotypes
 
-Due to the complexity of human-input metadata, we *currently* don't have a completely automatic classification method. Here we present an approximation that used to give enough number of samples after classification. In this session, we present what we had done on arabidopsis ecotypes.
+Due to the complexity (and perhaps incompleteness) of human-input metadata, we *currently* don't have a completely automatic classification method. Here we present an approximation that used to give enough number of samples after classification. In this session, we present what we had done on arabidopsis ecotypes.
 
 Suppose that `sel20261001.xml` is the metadata XML file that we obtained using the script described in the last session. The following two commands helped us for understanding the diversity inside the metadata.
 ```
@@ -252,57 +252,46 @@ not collected   104
 col-0 (cs70000) 90
 ```
 
-The next perl oneliner command was for simple (and dirty) ecotype classification for col-0 and ler. It reads `ecotype0.in` and appends 0-1 columns for each classified ecotypes.
+The next step is to write a set of [*curation rules*](https://github.com/wdlingit/maccu/blob/main/scripts/curation_spec.md) for ecotype classification and use the helper script `curation.pl` (in our `scripts` directory) to do the classification job.
 ```
-cat extraction/ecotype0.in |
-perl -ne '
-    chomp;
-    if($.==1){ print "$_\tcol0\tler\tOR\n"; next; }
-    ($value,$count)=split(/\t/);
-    if($value=~/col-0/ ||
-       $value=~/col_0/ ||
-       $value=~/col0/ ||
-       $value=~/col - 0/ ||
-       $value=~/columbia background/ ||
-       $value=~/^columbia$/ ||
-       $value=~/^coloumbia$/ ||
-       $value=~/^colombia 0$/ ||
-       $value=~/^colombia-0$/ || 
-       $value=~/^columbia - 0$/ || 
-       $value=~/columia-0/ || 
-       $value=~/^columbia0$/ || 
-       $value=~/^columbia_0$/ || 
-       $value=~/efo_0005147/ || 
-       $value=~/col 0 \(cs70000\)/ || 
-       $value=~/a.thalianaecotype columbia/ || 
-       $value=~/columbia-0 ecotype/ || 
-       $value=~/columbia-0 background/ || 
-       $value=~/wild-type columbia-0/ || 
-       $value=~/columbia-0 \(/ || 
-       $value=~/columbia \(/){
-        $col0=1 
-    }else{ 
-        $col0=0 
-    } 
-    if($value=~/landsberg erecta/ || 
-       $value=~/lansberg erecta/ || 
-       $value=~/landsberg ecotype/ || 
-       $value=~/efo_0005154/ || 
-       $value=~/ler-0/){ 
-        $ler=1 
-    }else{ 
-        $ler=0 
-    } 
-    if($col0 || $ler){ 
-        $or=1 
-    }else{ 
-        $or=0 
-    } 
-    print "$_\t$col0\t$ler\t$or\n";
-' > extraction/ecotype0.out
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/curation.pl
+Usage: ../scripts/curation.pl config.tsv input.tsv
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat ecotype0.config
+col0    regex   col-0
+col0    regex   col_0
+col0    regex   col0
+col0    regex   col - 0
+col0    regex   columbia background
+col0    regex   ^columbia$
+col0    regex   ^coloumbia$
+col0    regex   ^colombia 0$
+col0    regex   ^colombia-0$
+col0    regex   ^columbia - 0$
+col0    regex   columia-0
+col0    regex   ^columbia0$
+col0    regex   ^columbia_0$
+col0    regex   efo_0005147
+col0    regex   col 0 \(cs70000\)
+col0    regex   a.thalianaecotype columbia
+col0    regex   columbia-0 ecotype
+col0    regex   columbia-0 background
+col0    regex   wild-type columbia-0
+col0    regex   columbia-0 \(
+col0    regex   columbia \(
+
+ler     regex   landsberg erecta
+ler     regex   lansberg erecta
+ler     regex   landsberg ecotype
+ler     regex   efo_0005154
+ler     regex   ler-0
+
+OR      logic   col0 || ler
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/curation.pl ecotype0.config extraction/ecotype0.in > extraction/ecotype0.out
 ```
 
-This needs some iterative fix of the rules. The next two perl oneliners can provide some help.
+Building of the *curation rules* needs some iterative fixes. The next two perl oneliners can provide some help.
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat extraction/ecotype0.out | perl -ne 'chomp; @t=split(/\t/); print "$_\n" if $t[-1]==0' | head
 value   count   col0    ler     OR
@@ -341,51 +330,42 @@ plant line      114     172     0.66
 genetic background      90      377     0.24
 ```
 
-Again, we use the following perl oneliner for writing rules of curation.
+Again, we wrote another set for the curation.
 ```
-cat extraction/ecotype1.in | 
-perl -ne '
-    chomp; 
-    @t=split(/\t/); 
-    if($.==1){ 
-        print "$_\tselection\n"; 
-        next 
-    } 
-    $sel=0; 
-    $sel=1 if $t[-1]>0.5; 
-    if(($t[0] eq "cell line") || 
-       ($t[0] eq "cell type") || 
-       ($t[0] eq "cell_line") || 
-       ($t[0] eq "cultivar") || 
-       ($t[0] eq "genetic background") || 
-       ($t[0] eq "genetic background ecotype") || 
-       ($t[0] eq "subspecific genetic lineage name") || 
-       ($t[0] eq "strain/background") || 
-       ($t[0] eq "strain/ecotype") || 
-       ($t[0] eq "strain/line")){ 
-        $sel=1 
-    } 
-    if(($t[0] eq "female parent strain")){ 
-        $sel=0 
-    }  
-    push @t,$sel; 
-    print join("\t",@t)."\n"
-' > extraction/ecotype1.out
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat ecotype1.config
+selected_name   regex   ^cell line$
+selected_name   regex   ^cell type$
+selected_name   regex   ^cell_line$
+selected_name   regex   ^cultivar$
+selected_name   regex   ^genetic background$
+selected_name   regex   ^genetic background ecotype$
+selected_name   regex   ^subspecific genetic lineage name$
+selected_name   regex   ^strain/background$
+selected_name   regex   ^strain/ecotype$
+selected_name   regex   ^strain/line$
+
+female_parent_strain    regex   ^female parent strain$
+
+selection       expr    $fields[3] > 0.5
+selection       logic   selection || selected_name
+selection       logic   selection && !female_parent_strain
+
+wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/curation.pl ecotype1.config extraction/ecotype1.in > extraction/ecotype1.out
 ```
 
 **FOR A SHORT SUMMARY**, now we have `ecotype1.out` contains attributes we considered containing ecotype infromation in the metadata file. Note that the last column in `ecotype1.out` is containing values of 1's and 0's. Also, in `ecotype0.out`, we have values that we considered indicating col-0 or ler ecotype.
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/ecotype1.out
-attr    match   total   selection
-ecotype 17411   19706   0.88    1
-genotype        2218    21474   0.10    0
-ecotype background      406     513     0.79    1
-accession       256     452     0.57    1
-ecotype/background      225     232     0.97    1
-cultivar        205     3685    0.06    1
-background ecotype      166     279     0.59    1
-plant line      114     172     0.66    1
-genetic background      90      377     0.24    1
+attr    match   total   ratio   selected_name   female_parent_strain    selection
+ecotype 17411   19706   0.88    0       0       1
+genotype        2218    21474   0.10    0       0       0
+ecotype background      406     513     0.79    0       0       1
+accession       256     452     0.57    0       0       1
+ecotype/background      225     232     0.97    0       0       1
+cultivar        205     3685    0.06    1       0       1
+background ecotype      166     279     0.59    0       0       1
+plant line      114     172     0.66    0       0       1
+genetic background      90      377     0.24    1       0       1
 
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ head extraction/ecotype0.out
 value   count   col0    ler     OR
@@ -400,7 +380,7 @@ not collected   104     0       0       0
 col-0 (cs70000) 90      1       0       1
 ```
 
-So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 or ler value for every sample. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS014211 and DRS014212 are the first two SRS accessions considered not related with col-0. Note that our approach might not be fully accurate, but classified samples would be based on specified attributes and specified values in the metadata file.
+So it is possible for us to iterate all samples in the metadata file and see if any possible ecotype attribute is assigned with a possible col-0 or ler value. To do that, we applied the `biosampleClassify.pl` script. Note that it generates a *classification* matrix with the same number of columns as that in the `<valueFile>` file and the same number of rows as the number of SRS accessions in the metadata file. In the following example, it was shown that DRS014211 and DRS014212 are the first two SRS accessions considered not related with col-0. Note that our approach might not be fully accurate, but classified samples would be based on specified attributes and specified values in the metadata file.
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ ../scripts/biosampleClassify.pl
 biosampleClassify.pl <attrFile> <valueFile> <biosampleXML>
@@ -492,35 +472,3 @@ In above example, we started from one attrabute, collect *values* of our interes
 ```
 wdlin@comp04:/RAID2/R418/20261001_coexDB/ath$ cat sel20261001.xml | perl -ne 'if($.==1){ open(FILE,"<extraction/ecotype1.out"); while($line=<FILE>){ $line=~s/^\s+|\s+$//g; @s=split(/\t/,$line); $hash{$s[0]}=1 if $s[-1]==1 } close FILE; } chomp; if(/<Attribute attribute_name="(.+?)".*?>(.+?)</){ print "$2\n" if exists $hash{$1} }' | perl -ne 'chomp; $hash{lc($_)}++; if(eof){ print "value\tcount\n"; for $k (sort {$hash{$b}<=>$hash{$a}} keys %hash){ print "$k\t$hash{$k}\n" } }' > extraction/ecotype2.in
 ```
-
-### Sample classification part 5 (optional), import customized logic into the selection
-
-Some coding approach could be applied because the above attribute-value selection method is simple for general scenario and may not fit some complex cases. For example, for fly, strain K-12 and substrain mg1655 can both be values for attributes *strain* and *substrain*. In this case, a sample might be considered as both K12 and mg1655. This could be true to some people but some other might want to separate those K-12 samples without any substrain info from samples with specific strain/substrain info of mg1655. In this case, we can fix the selection matrix by coding.
-
-```
-wdlin@comp01:SOMEWHERE/ec$ head -10  extraction/ec_sel20240531.strain
-SRS     number  strain  mg1655  w3110   bw25113 ncm3722 K-12    b       rb001   ar3110  wo153   OR
-DRS200394       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200395       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200396       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200397       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200398       0       1       1       0       0       0       0       0       0       0       0       1
-ERS1139734      0       0       0       0       0       0       0       0       0       0       0       0
-ERS1146196      0       0       0       0       0       0       0       0       0       0       0       0
-ERS1203249      0       1       1       0       0       0       1       0       0       0       0       1
-ERS1203251      0       1       1       0       0       0       1       0       0       0       0       1
-
-wdlin@comp01:SOMEWHERE/ec$ head -10  extraction/ec_sel20240531.strain | perl -ne 'if($.==1){ print ; next } chomp; @t=split(/\t/); ($srs,$num,$strain,$mg1655,$w3110,$bw25113,$ncm3722,$k12,$b,$rb001,$ar3110,$wo153,$or)=@t; $k12=0 if ($mg1655 || $w3110 || $bw25113 || $ncm3722); @t=($srs,$num,$strain,$mg1655,$w3110,$bw25113,$ncm3722,$k12,$b,$rb001,$ar3110,$wo153,$or); print join("\t",@t)."\n"'
-SRS     number  strain  mg1655  w3110   bw25113 ncm3722 K-12    b       rb001   ar3110  wo153   OR
-DRS200394       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200395       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200396       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200397       0       1       1       0       0       0       0       0       0       0       0       1
-DRS200398       0       1       1       0       0       0       0       0       0       0       0       1
-ERS1139734      0       0       0       0       0       0       0       0       0       0       0       0
-ERS1146196      0       0       0       0       0       0       0       0       0       0       0       0
-ERS1203249      0       1       1       0       0       0       0       0       0       0       0       1
-ERS1203251      0       1       1       0       0       0       0       0       0       0       0       1
-```
-
-In this case, we previously considered mg1655, w3110, bw25113, ncm3722 as K-12 substrains and would like to make samples marked with these substrain not being marked by K-12 (ex: ERS1203249 and ERS1203251). So the perl oneliner was to transfer a column of values into values (`($srs,$num,$strain,$mg1655,$w3110,$bw25113,$ncm3722,$k12,$b,$rb001,$ar3110,$wo153,$or)=@t`) and make some simple logic (`$k12=0 if ($mg1655 || $w3110 || $bw25113 || $ncm3722)`). In so doing, the outputted selection matrix should exclude those samples with specified substrain info from K-12.
