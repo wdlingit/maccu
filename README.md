@@ -3,7 +3,7 @@ This respository is currently for describing the `OneStopWrapper.pl` of [maccu](
 
 #### Database collection
 
-**NOTE** (by 20261016): the new collection is under construction, see [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202610.md) for details. Current collection: arabidopsis and rice.
+**NOTE** (by 20261016): the new collection is under construction, see [here](https://github.com/wdlingit/maccu/blob/main/coexDB_202610.md) for details. Current collection: arabidopsis, rice, and maize.
 
 **NOTE** (by 20260317): database files recently migrated to [depositar](https://data.depositar.io/en/).
 
